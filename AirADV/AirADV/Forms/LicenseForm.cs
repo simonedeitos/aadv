@@ -24,14 +24,14 @@ namespace AirADV.Forms
             this.FormBorderStyle = FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
-            this.BackColor = Color.FromArgb(245, 248, 255);
+            this.BackColor = Color.FromArgb(45, 45, 48);
 
             // ===== HEADER =====
             Panel headerPanel = new Panel
             {
                 Dock = DockStyle.Top,
                 Height = 110,
-                BackColor = Color.FromArgb(0, 120, 212)
+                BackColor = Color.FromArgb(0, 120, 215)
             };
             this.Controls.Add(headerPanel);
 
@@ -77,13 +77,13 @@ namespace AirADV.Forms
             {
                 Location = new Point(margin, cardTop),
                 Size = new Size(580, 240),
-                BackColor = Color.White,
+                BackColor = Color.FromArgb(40, 40, 40),
                 Padding = new Padding(24)
             };
             cardPanel.Paint += (s, e) =>
             {
                 e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
-                using (var pen = new Pen(Color.FromArgb(220, 220, 230), 1))
+                using (var pen = new Pen(Color.FromArgb(70, 70, 70), 1))
                     e.Graphics.DrawRectangle(pen, 0, 0, cardPanel.Width - 1, cardPanel.Height - 1);
             };
             this.Controls.Add(cardPanel);
@@ -93,7 +93,7 @@ namespace AirADV.Forms
             {
                 Text = LanguageManager.GetString("License.OwnerName", "Name / Company"),
                 Font = new Font("Segoe UI", 9, FontStyle.Bold),
-                ForeColor = Color.FromArgb(100, 100, 120),
+                ForeColor = Color.FromArgb(180, 180, 180),
                 Location = new Point(24, 18),
                 AutoSize = true
             };
@@ -116,7 +116,7 @@ namespace AirADV.Forms
             {
                 Text = LanguageManager.GetString("License.SerialCode", "Serial Code"),
                 Font = new Font("Segoe UI", 9, FontStyle.Bold),
-                ForeColor = Color.FromArgb(100, 100, 120),
+                ForeColor = Color.FromArgb(180, 180, 180),
                 Location = new Point(24, 90),
                 AutoSize = true
             };
@@ -140,7 +140,7 @@ namespace AirADV.Forms
             {
                 Text = LanguageManager.GetString("License.Format", $"Format: {Models.LicenseInfo.SERIAL_PREFIX}XXXX-XXXX-XXXX"),
                 Font = new Font("Segoe UI", 8, FontStyle.Italic),
-                ForeColor = Color.FromArgb(100, 100, 120),
+                ForeColor = Color.FromArgb(180, 180, 180),
                 Location = new Point(24, 160),
                 AutoSize = true
             };
@@ -151,9 +151,9 @@ namespace AirADV.Forms
             {
                 Text = "www.airdirector.app",
                 Font = new Font("Segoe UI", 9, FontStyle.Regular),
-                LinkColor = Color.FromArgb(0, 120, 212),
-                ActiveLinkColor = Color.FromArgb(0, 120, 212),
-                VisitedLinkColor = Color.FromArgb(0, 120, 212),
+                LinkColor = Color.FromArgb(0, 120, 215),
+                ActiveLinkColor = Color.FromArgb(0, 120, 215),
+                VisitedLinkColor = Color.FromArgb(0, 120, 215),
                 Location = new Point(24, 182),
                 AutoSize = true
             };
@@ -188,7 +188,7 @@ namespace AirADV.Forms
             {
                 Text = LanguageManager.GetString("License.Info", "AirADV requires a valid license to work.\nPurchase your license at store.airdirector.app"),
                 Font = new Font("Segoe UI", 8, FontStyle.Italic),
-                ForeColor = Color.FromArgb(100, 100, 120),
+                ForeColor = Color.FromArgb(180, 180, 180),
                 Location = new Point(margin, infoTop),
                 Size = new Size(580, 36),
                 TextAlign = ContentAlignment.MiddleCenter
