@@ -54,6 +54,9 @@
         private System.Windows.Forms.FlowLayoutPanel flowManualSlots;
         private System.Windows.Forms.Button btnSelectAllSlots;
         private System.Windows.Forms.Button btnDeselectAllSlots;
+        private System.Windows.Forms.Label lblManualDailyPasses;
+        private System.Windows.Forms.NumericUpDown numManualDailyPasses;
+        private System.Windows.Forms.Label lblManualSlotCount;
 
         // STEP 3 - Revisione (✅ AGGIORNATO)
         private System.Windows.Forms.Panel pnlStep3;
@@ -129,6 +132,9 @@
             flowManualSlots = new FlowLayoutPanel();
             btnSelectAllSlots = new Button();
             btnDeselectAllSlots = new Button();
+            lblManualDailyPasses = new Label();
+            numManualDailyPasses = new NumericUpDown();
+            lblManualSlotCount = new Label();
             pnlStep3 = new Panel();
             lblStep3Title = new Label();
             progressDays = new ProgressBar();
@@ -144,6 +150,7 @@
             grpDistribution.SuspendLayout();
             grpAutoConfig.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)numDailyPasses).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)numManualDailyPasses).BeginInit();
             grpDays.SuspendLayout();
             grpManualSlots.SuspendLayout();
             pnlStep3.SuspendLayout();
@@ -680,10 +687,13 @@
             grpManualSlots.Controls.Add(flowManualSlots);
             grpManualSlots.Controls.Add(btnSelectAllSlots);
             grpManualSlots.Controls.Add(btnDeselectAllSlots);
+            grpManualSlots.Controls.Add(lblManualDailyPasses);
+            grpManualSlots.Controls.Add(numManualDailyPasses);
+            grpManualSlots.Controls.Add(lblManualSlotCount);
             grpManualSlots.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
             grpManualSlots.Location = new Point(49, 139);
             grpManualSlots.Name = "grpManualSlots";
-            grpManualSlots.Size = new Size(990, 110);
+            grpManualSlots.Size = new Size(990, 220);
             grpManualSlots.TabIndex = 3;
             grpManualSlots.TabStop = false;
             grpManualSlots.Text = "Selezione Manuale Punti Orari";
@@ -693,17 +703,17 @@
             // 
             flowManualSlots.AutoScroll = true;
             flowManualSlots.BorderStyle = BorderStyle.FixedSingle;
-            flowManualSlots.Location = new Point(15, 55);
+            flowManualSlots.Location = new Point(15, 25);
             flowManualSlots.Name = "flowManualSlots";
-            flowManualSlots.Size = new Size(960, 48);
+            flowManualSlots.Size = new Size(700, 160);
             flowManualSlots.TabIndex = 0;
             // 
             // btnSelectAllSlots
             // 
             btnSelectAllSlots.Font = new Font("Segoe UI", 8.5F);
-            btnSelectAllSlots.Location = new Point(15, 23);
+            btnSelectAllSlots.Location = new Point(730, 25);
             btnSelectAllSlots.Name = "btnSelectAllSlots";
-            btnSelectAllSlots.Size = new Size(120, 26);
+            btnSelectAllSlots.Size = new Size(130, 26);
             btnSelectAllSlots.TabIndex = 1;
             btnSelectAllSlots.Text = "✓ Seleziona Tutti";
             btnSelectAllSlots.UseVisualStyleBackColor = true;
@@ -712,13 +722,44 @@
             // btnDeselectAllSlots
             // 
             btnDeselectAllSlots.Font = new Font("Segoe UI", 8.5F);
-            btnDeselectAllSlots.Location = new Point(145, 23);
+            btnDeselectAllSlots.Location = new Point(730, 57);
             btnDeselectAllSlots.Name = "btnDeselectAllSlots";
             btnDeselectAllSlots.Size = new Size(135, 26);
             btnDeselectAllSlots.TabIndex = 2;
             btnDeselectAllSlots.Text = "✖ Deseleziona Tutti";
             btnDeselectAllSlots.UseVisualStyleBackColor = true;
             btnDeselectAllSlots.Click += btnDeselectAllSlots_Click;
+            // 
+            // lblManualDailyPasses
+            // 
+            lblManualDailyPasses.AutoSize = true;
+            lblManualDailyPasses.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+            lblManualDailyPasses.Location = new Point(730, 100);
+            lblManualDailyPasses.Name = "lblManualDailyPasses";
+            lblManualDailyPasses.TabIndex = 3;
+            lblManualDailyPasses.Text = "Passaggi al giorno:";
+            // 
+            // numManualDailyPasses
+            // 
+            numManualDailyPasses.Font = new Font("Segoe UI", 10F);
+            numManualDailyPasses.Location = new Point(730, 119);
+            numManualDailyPasses.Minimum = new decimal(new int[] { 1, 0, 0, 0 });
+            numManualDailyPasses.Maximum = new decimal(new int[] { 50, 0, 0, 0 });
+            numManualDailyPasses.Name = "numManualDailyPasses";
+            numManualDailyPasses.Size = new Size(60, 25);
+            numManualDailyPasses.TabIndex = 4;
+            numManualDailyPasses.Value = new decimal(new int[] { 8, 0, 0, 0 });
+            numManualDailyPasses.ValueChanged += numManualDailyPasses_ValueChanged;
+            // 
+            // lblManualSlotCount
+            // 
+            lblManualSlotCount.AutoSize = true;
+            lblManualSlotCount.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+            lblManualSlotCount.ForeColor = Color.FromArgb(0, 123, 255);
+            lblManualSlotCount.Location = new Point(730, 155);
+            lblManualSlotCount.Name = "lblManualSlotCount";
+            lblManualSlotCount.TabIndex = 5;
+            lblManualSlotCount.Text = "Slot selezionati: 0 / 8";
             // 
             // pnlStep3
             // 
@@ -842,9 +883,11 @@
             grpAutoConfig.ResumeLayout(false);
             grpAutoConfig.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)numDailyPasses).EndInit();
+            ((System.ComponentModel.ISupportInitialize)numManualDailyPasses).EndInit();
             grpDays.ResumeLayout(false);
             grpDays.PerformLayout();
             grpManualSlots.ResumeLayout(false);
+            grpManualSlots.PerformLayout();
             pnlStep3.ResumeLayout(false);
             pnlStep3.PerformLayout();
             panelButtons.ResumeLayout(false);

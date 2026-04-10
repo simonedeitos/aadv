@@ -23,9 +23,10 @@ namespace AirADV.Forms
 
         private bool _scheduleGenerated = false;
 
+        private bool _isLoadingData = false;
+
         private DataGridView dgvSchedule;
         private List<string> _availableTimeSlots;
-        private Label lblManualSlotCount;
 
         public CampaignWizardForm(int stationID)
         {
@@ -239,6 +240,8 @@ namespace AirADV.Forms
                 LoadAvailableTimeSlots();
                 ApplyLanguage();
 
+                UpdateDistributionMode();
+                UpdateManualSlotCount();
                 DisableStep3();
                 AddGenerateButton();
 
@@ -247,8 +250,11 @@ namespace AirADV.Forms
                     LoadExistingCampaignData();
                 }
 
-                dtpTimeFrom.Value = DateTime.Today.AddHours(0);
-                dtpTimeTo.Value = DateTime.Today.AddHours(23).AddMinutes(59);
+                if (!chkTimeFilter.Checked)
+                {
+                    dtpTimeFrom.Value = DateTime.Today.AddHours(0);
+                    dtpTimeTo.Value = DateTime.Today.AddHours(23).AddMinutes(59);
+                }
 
                 LanguageManager.LanguageChanged += LanguageManager_LanguageChanged;
             }
@@ -272,6 +278,7 @@ namespace AirADV.Forms
         // ✅ NUOVO:  Handler cambio categoria
         private void cmbCategory_SelectedIndexChanged(object sender, EventArgs e)
         {
+            if (_isLoadingData) return;
             if (cmbCategory.SelectedItem is DbcManager.Category selectedCategory)
             {
                 _campaign.CategoryID = selectedCategory.ID;
@@ -499,6 +506,9 @@ namespace AirADV.Forms
                 grpManualSlots.Text = LanguageManager.Get("CampaignWizard.GrpManualSlots", "Selezione Manuale Punti Orari");
                 btnSelectAllSlots.Text = LanguageManager.Get("CampaignWizard.BtnSelectAll", "✓ Seleziona Tutti");
                 btnDeselectAllSlots.Text = LanguageManager.Get("CampaignWizard.BtnDeselectAll", "✖ Deseleziona Tutti");
+                if (lblManualDailyPasses != null)
+                    lblManualDailyPasses.Text = LanguageManager.Get("CampaignWizard.LblManualDailyPasses", "Passaggi al giorno:");
+                UpdateManualSlotCount();
 
                 // ✅ STEP 3
                 if (_campaign.ID > 0 && !_scheduleGenerated)
@@ -713,6 +723,7 @@ namespace AirADV.Forms
 
         private void LoadExistingCampaignData()
         {
+            _isLoadingData = true;
             try
             {
                 Console.WriteLine($"[CampaignWizard] 🔄 Caricamento campagna esistente ID: {_campaign.ID}");
@@ -739,7 +750,9 @@ namespace AirADV.Forms
                     }
                 }
 
-                dtpStartDate.Value = _campaign.StartDate;
+                // Allow past start dates by not enforcing MinDate
+                try { dtpStartDate.Value = _campaign.StartDate; }
+                catch { dtpStartDate.Value = DateTime.Today; }
                 dtpEndDate.Value = _campaign.EndDate;
 
                 LoadExistingSpots();
@@ -757,6 +770,16 @@ namespace AirADV.Forms
                 else if (_campaign.DistributionMode == "MANUAL")
                     rdManual.Checked = true;
 
+                // Load numManualDailyPasses for manual campaigns
+                if (_campaign.DistributionMode == "MANUAL")
+                {
+                    int manualMax = _campaign.DailyPasses > 0 ? _campaign.DailyPasses : 1;
+                    if (manualMax >= (int)numManualDailyPasses.Minimum && manualMax <= (int)numManualDailyPasses.Maximum)
+                        numManualDailyPasses.Value = manualMax;
+                    else
+                        numManualDailyPasses.Value = numManualDailyPasses.Minimum;
+                }
+
                 chkMonday.Checked = _campaign.Monday;
                 chkTuesday.Checked = _campaign.Tuesday;
                 chkWednesday.Checked = _campaign.Wednesday;
@@ -768,8 +791,8 @@ namespace AirADV.Forms
                 if (_campaign.TimeFrom != "00:00:00" || _campaign.TimeTo != "23:59:59")
                 {
                     chkTimeFilter.Checked = true;
-                    dtpTimeFrom.Value = DateTime.Today.Add(TimeSpan.Parse(_campaign.TimeFrom));
-                    dtpTimeTo.Value = DateTime.Today.Add(TimeSpan.Parse(_campaign.TimeTo));
+                    try { dtpTimeFrom.Value = DateTime.Today.Add(TimeSpan.Parse(_campaign.TimeFrom)); } catch { }
+                    try { dtpTimeTo.Value = DateTime.Today.Add(TimeSpan.Parse(_campaign.TimeTo)); } catch { }
                 }
 
                 // Restore manual slot checkboxes when editing a manual campaign
@@ -799,6 +822,12 @@ namespace AirADV.Forms
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error
                 );
+            }
+            finally
+            {
+                _isLoadingData = false;
+                UpdateDistributionMode();
+                UpdateManualSlotCount();
             }
         }
 
@@ -922,6 +951,7 @@ namespace AirADV.Forms
 
         private void cmbClient_SelectedIndexChanged(object sender, EventArgs e)
         {
+            if (_isLoadingData) return;
             try
             {
                 if (cmbClient.SelectedItem != null && cmbClient.SelectedItem is DbcManager.Client selectedClient)
@@ -1092,23 +1122,11 @@ namespace AirADV.Forms
 
             flowManualSlots.Controls.Clear();
 
-            // Add counter label at the top of the manual slots panel
-            lblManualSlotCount = new Label
-            {
-                Name = "lblManualSlotCount",
-                Text = LanguageManager.Get("CampaignWizard.ManualSlotCount", "Slot selezionati: 0"),
-                AutoSize = true,
-                Font = new Font("Segoe UI", 9F, FontStyle.Bold),
-                ForeColor = Color.FromArgb(0, 123, 255),
-                Margin = new Padding(5, 5, 5, 10)
-            };
-            flowManualSlots.Controls.Add(lblManualSlotCount);
-
             foreach (var slot in timeSlots)
             {
                 var chk = new CheckBox
                 {
-                    Text = slot.SlotTime,
+                    Text = FormatTimeSlot(slot.SlotTime),
                     Tag = slot.SlotTime,
                     AutoSize = true,
                     Margin = new Padding(5),
@@ -1121,46 +1139,91 @@ namespace AirADV.Forms
 
         private void ManualSlotCheckBox_CheckedChanged(object sender, EventArgs e)
         {
+            if (_isLoadingData) return;
+
+            if (sender is CheckBox chk && chk.Checked)
+            {
+                int max = (int)numManualDailyPasses.Value;
+                int count = flowManualSlots.Controls.OfType<CheckBox>().Count(c => c.Checked);
+                if (count > max)
+                {
+                    chk.Checked = false;
+                    MessageBox.Show(
+                        string.Format(
+                            LanguageManager.Get("CampaignWizard.MaxSlotsReached", "Puoi selezionare al massimo {0} punti orari (passaggi al giorno)!"),
+                            max
+                        ),
+                        LanguageManager.Get("Common.Warning", "Attenzione"),
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Warning
+                    );
+                    return;
+                }
+            }
+
             UpdateManualSlotCount();
         }
 
         private void UpdateManualSlotCount()
         {
-            int selectedCount = 0;
-            foreach (Control ctrl in flowManualSlots.Controls)
-            {
-                if (ctrl is CheckBox chk && chk.Checked)
-                    selectedCount++;
-            }
+            int selectedCount = flowManualSlots.Controls.OfType<CheckBox>().Count(c => c.Checked);
+            int max = (int)numManualDailyPasses.Value;
 
             if (lblManualSlotCount != null)
             {
                 lblManualSlotCount.Text = string.Format(
-                    LanguageManager.Get("CampaignWizard.ManualSlotCount", "Slot selezionati: {0}"),
-                    selectedCount
+                    LanguageManager.Get("CampaignWizard.ManualSlotCountFmt", "Slot selezionati: {0} / {1}"),
+                    selectedCount, max
                 );
             }
         }
 
         private void rdAutoBalanced_CheckedChanged(object sender, EventArgs e)
         {
+            if (_isLoadingData) return;
             UpdateDistributionMode();
         }
 
         private void rdAutoAudience_CheckedChanged(object sender, EventArgs e)
         {
+            if (_isLoadingData) return;
             UpdateDistributionMode();
         }
 
         private void rdManual_CheckedChanged(object sender, EventArgs e)
         {
+            if (_isLoadingData) return;
             UpdateDistributionMode();
+        }
+
+        private void numManualDailyPasses_ValueChanged(object sender, EventArgs e)
+        {
+            if (_isLoadingData) return;
+            UpdateManualSlotCount();
         }
 
         private void UpdateDistributionMode()
         {
+            bool isManual = rdManual.Checked;
+
             grpAutoConfig.Visible = rdAutoBalanced.Checked || rdAutoAudience.Checked;
-            grpManualSlots.Visible = rdManual.Checked;
+            grpManualSlots.Visible = isManual;
+
+            // Dynamically reposition grpDays and resize pnlStep2/pnlStep3 based on active config panel
+            if (isManual)
+            {
+                // grpManualSlots bottom: 139 + 220 = 359, add 5px gap → 364
+                grpDays.Location = new Point(49, 364);
+                pnlStep2.Size = new Size(1070, 420);
+                pnlStep3.Location = new Point(20, pnlStep2.Bottom + 15);
+            }
+            else
+            {
+                // grpAutoConfig bottom: 139 + 110 = 249, add 5px gap → 254
+                grpDays.Location = new Point(49, 254);
+                pnlStep2.Size = new Size(1070, 310);
+                pnlStep3.Location = new Point(20, pnlStep2.Bottom + 15);
+            }
 
             if (rdAutoBalanced.Checked)
             {
@@ -1192,10 +1255,15 @@ namespace AirADV.Forms
 
         private void btnSelectAllSlots_Click(object sender, EventArgs e)
         {
+            int max = (int)numManualDailyPasses.Value;
+            int count = 0;
             foreach (Control ctrl in flowManualSlots.Controls)
             {
                 if (ctrl is CheckBox chk)
-                    chk.Checked = true;
+                {
+                    chk.Checked = count < max;
+                    if (chk.Checked) count++;
+                }
             }
         }
 
@@ -1303,7 +1371,7 @@ namespace AirADV.Forms
                     }
                 }
                 _campaign.ManualSlots = string.Join(";", selectedSlots);
-                _campaign.DailyPasses = selectedSlots.Count;
+                _campaign.DailyPasses = (int)numManualDailyPasses.Value;
                 _campaign.TimeFrom = "00:00:00";
                 _campaign.TimeTo = "23:59:59";
             }
@@ -1906,6 +1974,7 @@ namespace AirADV.Forms
 
         private void DgvSchedule_CurrentCellDirtyStateChanged(object sender, EventArgs e)
         {
+            if (_isLoadingData) return;
             if (dgvSchedule.IsCurrentCellDirty && dgvSchedule.CurrentCell is DataGridViewComboBoxCell)
             {
                 dgvSchedule.CommitEdit(DataGridViewDataErrorContexts.Commit);
@@ -1914,6 +1983,7 @@ namespace AirADV.Forms
 
         private void DgvSchedule_CellValueChanged(object sender, DataGridViewCellEventArgs e)
         {
+            if (_isLoadingData) return;
             if (e.RowIndex < 0 || e.ColumnIndex < 3)
                 return;
 
