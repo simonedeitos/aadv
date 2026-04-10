@@ -48,9 +48,9 @@ namespace AirADV.Services
                     .ToList();
 
                 using var stream = new FileStream(outputPath, FileMode.Create);
-                PdfWriter writer = new PdfWriter(stream);
-                PdfDocument pdf = new PdfDocument(writer);
-                Document doc = new Document(pdf);
+                using var writer = new PdfWriter(stream);
+                using var pdf = new PdfDocument(writer);
+                using var doc = new Document(pdf);
 
                 // Logo
                 if (!string.IsNullOrEmpty(station?.LogoPath) && File.Exists(station.LogoPath))
@@ -130,8 +130,6 @@ namespace AirADV.Services
                     .SetFontSize(8)
                     .SetTextAlignment(TextAlignment.CENTER);
                 doc.Add(footer);
-
-                doc.Close();
 
                 Console.WriteLine($"[ExportManager] PDF esportato: {outputPath}");
                 return true;

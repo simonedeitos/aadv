@@ -20,7 +20,13 @@ namespace AirADV.Services.Localization
         public static event EventHandler LanguageChanged;
 
         public static string CurrentCulture => _currentCulture;
+        /// <summary>
+        /// Nome file lingua corrente (es: "Italian", "English")
+        /// </summary>
         public static string CurrentLanguageFileName => _currentLanguageFileName; // ✅ NUOVO
+        /// <summary>
+        /// Alias di CurrentLanguageFileName per compatibilità con pattern AirManager
+        /// </summary>
         public static string CurrentLanguage => _currentLanguageFileName;
         public static string CurrentLanguageName { get; private set; } = "Italiano";
 
@@ -275,9 +281,7 @@ namespace AirADV.Services.Localization
                 string existing = File.ReadAllText(filePath, Encoding.UTF8);
 
                 // Rimuovi eventuale sezione [MissingKeys] precedente
-                int sectionIdx = existing.IndexOf("\n[MissingKeys]", StringComparison.Ordinal);
-                if (sectionIdx < 0)
-                    sectionIdx = existing.IndexOf("[MissingKeys]", StringComparison.Ordinal);
+                int sectionIdx = existing.IndexOf("[MissingKeys]", StringComparison.Ordinal);
                 if (sectionIdx >= 0)
                     existing = existing.Substring(0, sectionIdx).TrimEnd();
 
