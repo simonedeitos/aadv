@@ -175,6 +175,13 @@ namespace AirADV.Services
             set { _miniPlayerVolume = value; }
         }
 
+        private static int _lastCampaignNumber = 0;
+        public static int LastCampaignNumber
+        {
+            get { return _lastCampaignNumber; }
+            set { _lastCampaignNumber = value; }
+        }
+
         // ═══════════════════════════════════════════════════════════
         // METODI
         // ═══════════════════════════════════════════════════════════
@@ -376,6 +383,9 @@ namespace AirADV.Services
                         case "MiniPlayerVolume":
                             int.TryParse(value, out _miniPlayerVolume);
                             break;
+                        case "LastCampaignNumber":
+                            int.TryParse(value, out _lastCampaignNumber);
+                            break;
                     }
                 }
 
@@ -407,7 +417,8 @@ namespace AirADV.Services
                     $"MediaLibraryPath={_mediaLibraryPath}",
                     $"AutoSave={_autoSave}",
                     $"OutputDeviceNumber={_outputDeviceNumber}",
-                    $"MiniPlayerVolume={_miniPlayerVolume}"
+                    $"MiniPlayerVolume={_miniPlayerVolume}",
+                    $"LastCampaignNumber={_lastCampaignNumber}"
                 };
 
                 File.WriteAllLines(configPath, lines);
