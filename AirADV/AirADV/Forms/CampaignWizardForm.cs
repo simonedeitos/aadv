@@ -752,7 +752,7 @@ namespace AirADV.Forms
 
                 // Allow past start dates by not enforcing MinDate
                 try { dtpStartDate.Value = _campaign.StartDate; }
-                catch { dtpStartDate.Value = DateTime.Today; }
+                catch (ArgumentOutOfRangeException ex2) { Console.WriteLine($"[CampaignWizard] ⚠️ dtpStartDate out of range: {ex2.Message}"); dtpStartDate.Value = DateTime.Today; }
                 dtpEndDate.Value = _campaign.EndDate;
 
                 LoadExistingSpots();
@@ -791,8 +791,10 @@ namespace AirADV.Forms
                 if (_campaign.TimeFrom != "00:00:00" || _campaign.TimeTo != "23:59:59")
                 {
                     chkTimeFilter.Checked = true;
-                    try { dtpTimeFrom.Value = DateTime.Today.Add(TimeSpan.Parse(_campaign.TimeFrom)); } catch { }
-                    try { dtpTimeTo.Value = DateTime.Today.Add(TimeSpan.Parse(_campaign.TimeTo)); } catch { }
+                    try { dtpTimeFrom.Value = DateTime.Today.Add(TimeSpan.Parse(_campaign.TimeFrom)); }
+                    catch (Exception ex2) { Console.WriteLine($"[CampaignWizard] ⚠️ dtpTimeFrom parse error: {ex2.Message}"); }
+                    try { dtpTimeTo.Value = DateTime.Today.Add(TimeSpan.Parse(_campaign.TimeTo)); }
+                    catch (Exception ex2) { Console.WriteLine($"[CampaignWizard] ⚠️ dtpTimeTo parse error: {ex2.Message}"); }
                 }
 
                 // Restore manual slot checkboxes when editing a manual campaign
@@ -1255,6 +1257,7 @@ namespace AirADV.Forms
 
         private void btnSelectAllSlots_Click(object sender, EventArgs e)
         {
+            if (_isLoadingData) return;
             int max = (int)numManualDailyPasses.Value;
             int count = 0;
             foreach (Control ctrl in flowManualSlots.Controls)
@@ -1269,6 +1272,7 @@ namespace AirADV.Forms
 
         private void btnDeselectAllSlots_Click(object sender, EventArgs e)
         {
+            if (_isLoadingData) return;
             foreach (Control ctrl in flowManualSlots.Controls)
             {
                 if (ctrl is CheckBox chk)
