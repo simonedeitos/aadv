@@ -1,5 +1,6 @@
 ﻿using AirADV.Forms;
 using AirADV.Services;
+using AirADV.Services.Licensing;
 using AirADV.Services.Localization;
 using System;
 using System.Windows.Forms;
@@ -50,6 +51,28 @@ namespace AirADV
                 Console.WriteLine();
                 Console.WriteLine("[Program] ✅ Inizializzazione completata");
                 Console.WriteLine();
+
+                // ✅ 3.5 Verifica Licenza
+                Console.WriteLine("[AirADV] Verifica licenza...");
+
+                if (!LicenseManager.IsLicenseValid())
+                {
+                    Console.WriteLine("[AirADV] ⚠️ Licenza non valida, apertura form di attivazione...");
+                    using (var licenseForm = new LicenseForm())
+                    {
+                        DialogResult result = licenseForm.ShowDialog();
+                        if (result != DialogResult.OK)
+                        {
+                            Console.WriteLine("[AirADV] ❌ Attivazione licenza annullata. Chiusura applicazione.");
+                            return;
+                        }
+                    }
+                    Console.WriteLine("[AirADV] ✅ Licenza attivata con successo");
+                }
+                else
+                {
+                    Console.WriteLine("[AirADV] ✅ Licenza valida");
+                }
 
                 // ✅ 4.Avvio applicazione
                 Console.WriteLine("[Program] 🚀 Avvio MainForm...");
