@@ -7,7 +7,6 @@ namespace AirADV.Forms
 {
     public partial class LicenseRemoveConfirmForm : Form
     {
-        private Panel _contentPanel = null!;
         private Label _warningLabel = null!;
         private Label _messageLabel = null!;
         private Button _yesButton = null!;
