@@ -745,7 +745,10 @@ namespace AirADV.Forms
                 LoadExistingSpots();
                 UpdateSpotList();
 
-                numDailyPasses.Value = _campaign.DailyPasses;
+                if (_campaign.DailyPasses >= (int)numDailyPasses.Minimum)
+                    numDailyPasses.Value = _campaign.DailyPasses;
+                else
+                    numDailyPasses.Value = numDailyPasses.Minimum;
 
                 if (_campaign.DistributionMode == "BALANCED")
                     rdAutoBalanced.Checked = true;
@@ -888,24 +891,18 @@ namespace AirADV.Forms
                 dgvSchedule.Refresh();
                 HideGenerateButton();
 
-                System.Threading.Tasks.Task.Delay(100).ContinueWith(_ =>
+                BeginInvoke((MethodInvoker)delegate
                 {
                     try
                     {
-                        if (!this.IsDisposed && !this.Disposing)
-                        {
-                            this.Invoke((MethodInvoker)delegate
-                            {
-                                pnlStep3.Enabled = true;
-                                dgvSchedule.Enabled = true;
-                                lblStep3Title.BackColor = Color.FromArgb(40, 167, 69);
-                                lblStep3Title.Text = LanguageManager.Get("CampaignWizard.Step3Active", "✅ STEP 3: Revisione e Modifica Schedulazione");
-                            });
-                        }
+                        pnlStep3.Enabled = true;
+                        dgvSchedule.Enabled = true;
+                        lblStep3Title.BackColor = Color.FromArgb(40, 167, 69);
+                        lblStep3Title.Text = LanguageManager.Get("CampaignWizard.Step3Active", "✅ STEP 3: Revisione e Modifica Schedulazione");
                     }
-                    catch (ObjectDisposedException)
+                    catch (Exception ex2)
                     {
-                        // Form was closed before the delayed task completed — safe to ignore
+                        Console.WriteLine($"[CampaignWizard] ⚠️ Errore deferred Step3 update: {ex2.Message}");
                     }
                 });
 
@@ -1450,9 +1447,17 @@ namespace AirADV.Forms
                             if (i < daily.TimeSlots.Count)
                             {
                                 var slotDataSource = new List<string>(_availableTimeSlots);
-                                comboCell.DataSource = slotDataSource;
 
                                 string formattedValue = FormatTimeSlot(daily.TimeSlots[i]);
+
+                                // Ensure the stored slot value is present in the DataSource
+                                if (!slotDataSource.Contains(formattedValue) && !string.IsNullOrEmpty(formattedValue))
+                                {
+                                    slotDataSource.Add(formattedValue);
+                                    slotDataSource.Sort();
+                                }
+
+                                comboCell.DataSource = slotDataSource;
                                 comboCell.Value = formattedValue;
 
                                 if (isPastDay)
