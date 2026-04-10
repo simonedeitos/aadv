@@ -1,0 +1,72 @@
+using System;
+using System.Management;
+using System.Security.Cryptography;
+using System.Text;
+
+namespace AirADV.Services.Licensing
+{
+    public static class HardwareIdentifier
+    {
+        private static string? _cachedHardwareId;
+
+        public static string GetMachineID()
+        {
+            if (!string.IsNullOrEmpty(_cachedHardwareId))
+                return _cachedHardwareId;
+            try
+            {
+                string cpuId = GetWmiProperty("Win32_Processor", "ProcessorId");
+                string boardId = GetWmiProperty("Win32_BaseBoard", "SerialNumber");
+                string diskId = GetWmiProperty("Win32_DiskDrive", "SerialNumber");
+                string biosId = GetWmiProperty("Win32_BIOS", "SerialNumber");
+                string combined = $"{cpuId}|{boardId}|{diskId}|{biosId}";
+                _cachedHardwareId = ComputeHash(combined);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[HardwareIdentifier] Error generating hardware ID: {ex.Message}");
+                string fallback = $"{Environment.MachineName}|{Environment.UserName}|{Environment.OSVersion}";
+                _cachedHardwareId = ComputeHash(fallback);
+            }
+            return _cachedHardwareId!;
+        }
+
+        private static string ComputeHash(string input)
+        {
+            using (SHA256 sha256 = SHA256.Create())
+            {
+                byte[] hashBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(input));
+                return BitConverter.ToString(hashBytes).Replace("-", "").Substring(0, 32);
+            }
+        }
+
+        private static string GetWmiProperty(string wmiClass, string propertyName)
+        {
+            try
+            {
+                using (ManagementObjectSearcher searcher = new ManagementObjectSearcher($"SELECT {propertyName} FROM {wmiClass}"))
+                {
+                    foreach (ManagementObject obj in searcher.Get())
+                    {
+                        object? value = obj[propertyName];
+                        if (value != null)
+                        {
+                            string result = value.ToString()?.Trim() ?? string.Empty;
+                            if (!string.IsNullOrEmpty(result) &&
+                                !result.Equals("To Be Filled By O.E.M.", StringComparison.OrdinalIgnoreCase) &&
+                                !result.Equals("Default string", StringComparison.OrdinalIgnoreCase))
+                                return result;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[HardwareIdentifier] WMI query failed for {wmiClass}.{propertyName}: {ex.Message}");
+            }
+            return string.Empty;
+        }
+
+        public static void ResetCache() { _cachedHardwareId = null; }
+    }
+}
