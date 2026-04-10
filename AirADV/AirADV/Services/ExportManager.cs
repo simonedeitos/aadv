@@ -60,7 +60,7 @@ namespace AirADV.Services
                         ImageData imageData = ImageDataFactory.Create(station.LogoPath);
                         iText.Layout.Element.Image logo = new iText.Layout.Element.Image(imageData);
                         logo.ScaleToFit(200f, 60f);
-                        logo.SetHorizontalAlignment(HorizontalAlignment.CENTER);
+                        logo.SetHorizontalAlignment(iText.Layout.Properties.HorizontalAlignment.CENTER);
                         doc.Add(logo);
                     }
                     catch (Exception ex)

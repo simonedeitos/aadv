@@ -34,6 +34,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="Resources\Languages\*.ini">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="itext7" Version="8.0.5" />
     <PackageReference Include="itext7.bouncy-castle-adapter" Version="8.0.5" />
     <PackageReference Include="LibVLCSharp.WinForms" Version="3.9.6" />
