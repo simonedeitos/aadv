@@ -324,7 +324,7 @@ namespace AirADV.Forms
                 g.DrawString(_station.StationName, fontTitle, brushBlue, leftMargin, yPos);
                 yPos += 25;
 
-                if (!string.IsNullOrEmpty(_station.Frequency))
+                if (!string.IsNullOrEmpty(_station.Frequency) && _station.Frequency != "N/A")
                 {
                     g.DrawString(
                         string.Format(
@@ -343,172 +343,175 @@ namespace AirADV.Forms
                 g.DrawLine(penThick, leftMargin, yPos, rightMargin, yPos);
                 yPos += 20;
 
-                // ═══════════════════════════════════════════════════════════
-                // 2.DATI CLIENTE
-                // ═══════════════════════════════════════════════════════════
-
-                g.DrawString(
-                    LanguageManager.Get("PDFPreview.ClientDataTitle", "DATI CLIENTE"),
-                    fontHeader,
-                    brushBlack,
-                    leftMargin,
-                    yPos
-                );
-                yPos += 25;
-
-                g.DrawString(
-                    LanguageManager.Get("PDFPreview.Client", "Cliente: "),
-                    fontBold,
-                    brushBlack,
-                    leftMargin,
-                    yPos
-                );
-                g.DrawString(_client.ClientName, fontNormal, brushBlack, leftMargin + 150, yPos);
-                yPos += 20;
-
-                if (!string.IsNullOrEmpty(_client.CompanyName))
+                if (_currentPage == 0)
                 {
+                    // ═══════════════════════════════════════════════════════════
+                    // 2.DATI CLIENTE
+                    // ═══════════════════════════════════════════════════════════
+
                     g.DrawString(
-                        LanguageManager.Get("PDFPreview.CompanyName", "Ragione Sociale:"),
+                        LanguageManager.Get("PDFPreview.ClientDataTitle", "DATI CLIENTE"),
+                        fontHeader,
+                        brushBlack,
+                        leftMargin,
+                        yPos
+                    );
+                    yPos += 25;
+
+                    g.DrawString(
+                        LanguageManager.Get("PDFPreview.Client", "Cliente: "),
                         fontBold,
                         brushBlack,
                         leftMargin,
                         yPos
                     );
-                    g.DrawString(_client.CompanyName, fontNormal, brushBlack, leftMargin + 150, yPos);
+                    g.DrawString(_client.ClientName, fontNormal, brushBlack, leftMargin + 150, yPos);
                     yPos += 20;
-                }
 
-                if (!string.IsNullOrEmpty(_client.Email))
-                {
+                    if (!string.IsNullOrEmpty(_client.CompanyName))
+                    {
+                        g.DrawString(
+                            LanguageManager.Get("PDFPreview.CompanyName", "Ragione Sociale:"),
+                            fontBold,
+                            brushBlack,
+                            leftMargin,
+                            yPos
+                        );
+                        g.DrawString(_client.CompanyName, fontNormal, brushBlack, leftMargin + 150, yPos);
+                        yPos += 20;
+                    }
+
+                    if (!string.IsNullOrEmpty(_client.Email))
+                    {
+                        g.DrawString(
+                            LanguageManager.Get("PDFPreview.Email", "Email:"),
+                            fontBold,
+                            brushBlack,
+                            leftMargin,
+                            yPos
+                        );
+                        g.DrawString(_client.Email, fontNormal, brushBlack, leftMargin + 150, yPos);
+                        yPos += 20;
+                    }
+
+                    if (!string.IsNullOrEmpty(_client.Phone))
+                    {
+                        g.DrawString(
+                            LanguageManager.Get("PDFPreview.Phone", "Telefono:"),
+                            fontBold,
+                            brushBlack,
+                            leftMargin,
+                            yPos
+                        );
+                        g.DrawString(_client.Phone, fontNormal, brushBlack, leftMargin + 150, yPos);
+                        yPos += 20;
+                    }
+
+                    yPos += 10;
+                    g.DrawLine(penLine, leftMargin, yPos, rightMargin, yPos);
+                    yPos += 20;
+
+                    // ═══════════════════════════════════════════════════════════
+                    // 3.DATI CAMPAGNA
+                    // ═══════════════════════════════════════════════════════════
+
                     g.DrawString(
-                        LanguageManager.Get("PDFPreview.Email", "Email:"),
+                        LanguageManager.Get("PDFPreview.CampaignDataTitle", "DATI CAMPAGNA PUBBLICITARIA"),
+                        fontHeader,
+                        brushBlack,
+                        leftMargin,
+                        yPos
+                    );
+                    yPos += 25;
+
+                    g.DrawString(
+                        LanguageManager.Get("PDFPreview.CampaignName", "Nome Campagna:"),
                         fontBold,
                         brushBlack,
                         leftMargin,
                         yPos
                     );
-                    g.DrawString(_client.Email, fontNormal, brushBlack, leftMargin + 150, yPos);
+                    g.DrawString(_campaign.CampaignName, fontNormal, brushBlack, leftMargin + 150, yPos);
                     yPos += 20;
-                }
 
-                if (!string.IsNullOrEmpty(_client.Phone))
-                {
                     g.DrawString(
-                        LanguageManager.Get("PDFPreview.Phone", "Telefono:"),
+                        LanguageManager.Get("PDFPreview.CampaignCode", "Codice Campagna:"),
                         fontBold,
                         brushBlack,
                         leftMargin,
                         yPos
                     );
-                    g.DrawString(_client.Phone, fontNormal, brushBlack, leftMargin + 150, yPos);
+                    g.DrawString(_campaign.CampaignCode, fontNormal, brushBlack, leftMargin + 150, yPos);
+                    yPos += 20;
+
+                    g.DrawString(
+                        LanguageManager.Get("PDFPreview.Period", "Periodo:"),
+                        fontBold,
+                        brushBlack,
+                        leftMargin,
+                        yPos
+                    );
+                    g.DrawString(
+                        $"{_campaign.StartDate:dd/MM/yyyy} - {_campaign.EndDate:dd/MM/yyyy}",
+                        fontNormal,
+                        brushBlack,
+                        leftMargin + 150,
+                        yPos
+                    );
+                    yPos += 20;
+
+                    g.DrawString(
+                        LanguageManager.Get("PDFPreview.ScheduledDays", "Giorni schedulati:"),
+                        fontBold,
+                        brushBlack,
+                        leftMargin,
+                        yPos
+                    );
+                    g.DrawString($"{_dailySchedules.Count}", fontNormal, brushBlack, leftMargin + 150, yPos);
+                    yPos += 20;
+
+                    g.DrawString(
+                        LanguageManager.Get("PDFPreview.DailyPasses", "Passaggi al giorno:"),
+                        fontBold,
+                        brushBlack,
+                        leftMargin,
+                        yPos
+                    );
+                    g.DrawString($"{_campaign.DailyPasses}", fontNormal, brushBlack, leftMargin + 150, yPos);
+                    yPos += 20;
+
+                    int totalPasses = _dailySchedules.Sum(d => d.TimeSlots.Count);
+                    g.DrawString(
+                        LanguageManager.Get("PDFPreview.TotalPasses", "Totale passaggi:"),
+                        fontBold,
+                        brushBlack,
+                        leftMargin,
+                        yPos
+                    );
+                    g.DrawString($"{totalPasses}", fontNormal, brushBlack, leftMargin + 150, yPos);
+                    yPos += 20;
+
+                    // ✅ Spot in rotazione CON LETTERE
+                    g.DrawString(
+                        LanguageManager.Get("PDFPreview.RotatingSpots", "Spot in rotazione: "),
+                        fontBold,
+                        brushBlack,
+                        leftMargin,
+                        yPos
+                    );
+                    yPos += 20;
+
+                    foreach (var spot in _spots)
+                    {
+                        string letter = _spotLetters[spot.ID];
+                        g.DrawString($"   [{letter}] {spot.SpotTitle} ({spot.Duration}s)", fontSmall, brushBlack, leftMargin + 20, yPos);
+                        yPos += 18;
+                    }
+
+                    yPos += 10;
+                    g.DrawLine(penLine, leftMargin, yPos, rightMargin, yPos);
                     yPos += 20;
                 }
-
-                yPos += 10;
-                g.DrawLine(penLine, leftMargin, yPos, rightMargin, yPos);
-                yPos += 20;
-
-                // ═══════════════════════════════════════════════════════════
-                // 3.DATI CAMPAGNA
-                // ═══════════════════════════════════════════════════════════
-
-                g.DrawString(
-                    LanguageManager.Get("PDFPreview.CampaignDataTitle", "DATI CAMPAGNA PUBBLICITARIA"),
-                    fontHeader,
-                    brushBlack,
-                    leftMargin,
-                    yPos
-                );
-                yPos += 25;
-
-                g.DrawString(
-                    LanguageManager.Get("PDFPreview.CampaignName", "Nome Campagna:"),
-                    fontBold,
-                    brushBlack,
-                    leftMargin,
-                    yPos
-                );
-                g.DrawString(_campaign.CampaignName, fontNormal, brushBlack, leftMargin + 150, yPos);
-                yPos += 20;
-
-                g.DrawString(
-                    LanguageManager.Get("PDFPreview.CampaignCode", "Codice Campagna:"),
-                    fontBold,
-                    brushBlack,
-                    leftMargin,
-                    yPos
-                );
-                g.DrawString(_campaign.CampaignCode, fontNormal, brushBlack, leftMargin + 150, yPos);
-                yPos += 20;
-
-                g.DrawString(
-                    LanguageManager.Get("PDFPreview.Period", "Periodo:"),
-                    fontBold,
-                    brushBlack,
-                    leftMargin,
-                    yPos
-                );
-                g.DrawString(
-                    $"{_campaign.StartDate:dd/MM/yyyy} - {_campaign.EndDate:dd/MM/yyyy}",
-                    fontNormal,
-                    brushBlack,
-                    leftMargin + 150,
-                    yPos
-                );
-                yPos += 20;
-
-                g.DrawString(
-                    LanguageManager.Get("PDFPreview.ScheduledDays", "Giorni schedulati:"),
-                    fontBold,
-                    brushBlack,
-                    leftMargin,
-                    yPos
-                );
-                g.DrawString($"{_dailySchedules.Count}", fontNormal, brushBlack, leftMargin + 150, yPos);
-                yPos += 20;
-
-                g.DrawString(
-                    LanguageManager.Get("PDFPreview.DailyPasses", "Passaggi al giorno:"),
-                    fontBold,
-                    brushBlack,
-                    leftMargin,
-                    yPos
-                );
-                g.DrawString($"{_campaign.DailyPasses}", fontNormal, brushBlack, leftMargin + 150, yPos);
-                yPos += 20;
-
-                int totalPasses = _dailySchedules.Sum(d => d.TimeSlots.Count);
-                g.DrawString(
-                    LanguageManager.Get("PDFPreview.TotalPasses", "Totale passaggi:"),
-                    fontBold,
-                    brushBlack,
-                    leftMargin,
-                    yPos
-                );
-                g.DrawString($"{totalPasses}", fontNormal, brushBlack, leftMargin + 150, yPos);
-                yPos += 20;
-
-                // ✅ Spot in rotazione CON LETTERE
-                g.DrawString(
-                    LanguageManager.Get("PDFPreview.RotatingSpots", "Spot in rotazione: "),
-                    fontBold,
-                    brushBlack,
-                    leftMargin,
-                    yPos
-                );
-                yPos += 20;
-
-                foreach (var spot in _spots)
-                {
-                    string letter = _spotLetters[spot.ID];
-                    g.DrawString($"   [{letter}] {spot.SpotTitle} ({spot.Duration}s)", fontSmall, brushBlack, leftMargin + 20, yPos);
-                    yPos += 18;
-                }
-
-                yPos += 10;
-                g.DrawLine(penLine, leftMargin, yPos, rightMargin, yPos);
-                yPos += 20;
 
                 // ═══════════════════════════════════════════════════════════
                 // 4.PROGRAMMAZIONE GIORNALIERA
