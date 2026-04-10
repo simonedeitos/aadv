@@ -9,19 +9,6 @@ namespace AirADV.Forms
 {
     public partial class LicenseForm : Form
     {
-        private Panel _headerPanel = null!;
-        private Label _titleLabel = null!;
-        private Label _subtitleLabel = null!;
-        private Panel _contentPanel = null!;
-        private Label _serialLabel = null!;
-        private TextBox _serialTextBox = null!;
-        private Label _ownerLabel = null!;
-        private TextBox _ownerTextBox = null!;
-        private Label _infoLabel = null!;
-        private Button _activateButton = null!;
-        private Button _cancelButton = null!;
-        private Label _statusLabel = null!;
-
         public LicenseForm()
         {
             InitializeComponent();
@@ -37,181 +24,214 @@ namespace AirADV.Forms
             this.FormBorderStyle = FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
-            this.BackColor = Color.FromArgb(245, 245, 250);
+            this.BackColor = Color.FromArgb(245, 248, 255);
 
-            // Header panel
-            _headerPanel = new Panel
+            // ===== HEADER =====
+            Panel headerPanel = new Panel
             {
                 Dock = DockStyle.Top,
-                Height = 80,
+                Height = 110,
                 BackColor = Color.FromArgb(0, 120, 212)
             };
+            this.Controls.Add(headerPanel);
 
-            _titleLabel = new Label
+            Label lblIcon = new Label
             {
-                Text = "AirADV",
+                Text = "🔐",
+                Font = new Font("Segoe UI", 30),
+                ForeColor = Color.White,
+                Location = new Point(20, 20),
+                AutoSize = true
+            };
+            headerPanel.Controls.Add(lblIcon);
+
+            Label lblTitle = new Label
+            {
+                Text = LanguageManager.GetString("License.Title", "License Activation"),
                 Font = new Font("Segoe UI", 20, FontStyle.Bold),
                 ForeColor = Color.White,
-                AutoSize = true,
-                Location = new Point(24, 12)
+                AutoSize = false,
+                Size = new Size(460, 42),
+                Location = new Point(82, 18),
+                TextAlign = ContentAlignment.MiddleLeft
             };
+            headerPanel.Controls.Add(lblTitle);
 
-            _subtitleLabel = new Label
+            Label lblSubtitle = new Label
             {
-                Text = LanguageManager.GetString("License.Subtitle", "License Activation"),
-                Font = new Font("Segoe UI", 11, FontStyle.Regular),
+                Text = LanguageManager.GetString("License.Subtitle", "Enter your serial code to unlock AirADV"),
+                Font = new Font("Segoe UI", 9),
                 ForeColor = Color.FromArgb(200, 230, 255),
-                AutoSize = true,
-                Location = new Point(26, 46)
+                AutoSize = false,
+                Size = new Size(520, 22),
+                Location = new Point(82, 66),
+                TextAlign = ContentAlignment.MiddleLeft
             };
+            headerPanel.Controls.Add(lblSubtitle);
 
-            _headerPanel.Controls.Add(_titleLabel);
-            _headerPanel.Controls.Add(_subtitleLabel);
+            // ===== MAIN CARD =====
+            int margin = 20;
+            int cardTop = 110 + margin;
 
-            // Content panel
-            _contentPanel = new Panel
+            Panel cardPanel = new Panel
             {
+                Location = new Point(margin, cardTop),
+                Size = new Size(580, 240),
                 BackColor = Color.White,
-                BorderStyle = BorderStyle.None,
-                Location = new Point(20, 100),
-                Size = new Size(580, 290),
-                Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
+                Padding = new Padding(24)
             };
-
-            _serialLabel = new Label
+            cardPanel.Paint += (s, e) =>
             {
-                Text = LanguageManager.GetString("License.SerialKey", "Serial Key:"),
-                Font = new Font("Segoe UI", 10, FontStyle.Bold),
-                ForeColor = Color.FromArgb(40, 40, 50),
-                AutoSize = true,
-                Location = new Point(20, 24)
+                e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
+                using (var pen = new Pen(Color.FromArgb(220, 220, 230), 1))
+                    e.Graphics.DrawRectangle(pen, 0, 0, cardPanel.Width - 1, cardPanel.Height - 1);
             };
+            this.Controls.Add(cardPanel);
 
-            _serialTextBox = new TextBox
+            // Owner Name Label
+            Label lblOwner = new Label
             {
+                Text = LanguageManager.GetString("License.OwnerName", "Name / Company"),
+                Font = new Font("Segoe UI", 9, FontStyle.Bold),
+                ForeColor = Color.FromArgb(100, 100, 120),
+                Location = new Point(24, 18),
+                AutoSize = true
+            };
+            cardPanel.Controls.Add(lblOwner);
+
+            TextBox txtOwner = new TextBox
+            {
+                Name = "txtOwner",
                 Font = new Font("Segoe UI", 11),
-                Location = new Point(20, 50),
-                Size = new Size(540, 30),
+                Location = new Point(24, 40),
+                Size = new Size(532, 34),
                 BorderStyle = BorderStyle.FixedSingle,
-                PlaceholderText = "AAD-XXXX-XXXX-XXXX",
-                CharacterCasing = CharacterCasing.Upper
+                BackColor = Color.FromArgb(30, 30, 30),
+                ForeColor = Color.White
             };
+            cardPanel.Controls.Add(txtOwner);
 
-            _ownerLabel = new Label
+            // Serial Label
+            Label lblSerial = new Label
             {
-                Text = LanguageManager.GetString("License.OwnerName", "Owner Name (optional):"),
-                Font = new Font("Segoe UI", 10, FontStyle.Bold),
-                ForeColor = Color.FromArgb(40, 40, 50),
-                AutoSize = true,
-                Location = new Point(20, 100)
+                Text = LanguageManager.GetString("License.SerialCode", "Serial Code"),
+                Font = new Font("Segoe UI", 9, FontStyle.Bold),
+                ForeColor = Color.FromArgb(100, 100, 120),
+                Location = new Point(24, 90),
+                AutoSize = true
             };
+            cardPanel.Controls.Add(lblSerial);
 
-            _ownerTextBox = new TextBox
+            TextBox txtSerial = new TextBox
             {
-                Font = new Font("Segoe UI", 11),
-                Location = new Point(20, 126),
-                Size = new Size(540, 30),
+                Name = "txtSerial",
+                Font = new Font("Segoe UI", 13, FontStyle.Bold),
+                Location = new Point(24, 112),
+                Size = new Size(532, 36),
+                MaxLength = 18,
+                CharacterCasing = CharacterCasing.Upper,
                 BorderStyle = BorderStyle.FixedSingle,
-                PlaceholderText = LanguageManager.GetString("License.OwnerPlaceholder", "Your name or company")
+                BackColor = Color.FromArgb(30, 30, 30),
+                ForeColor = Color.White
             };
+            cardPanel.Controls.Add(txtSerial);
 
-            _infoLabel = new Label
+            Label lblFormat = new Label
             {
-                Text = LanguageManager.GetString("License.InfoText",
-                    "To purchase a license for AirADV, visit store.airdirector.app"),
+                Text = LanguageManager.GetString("License.Format", $"Format: {Models.LicenseInfo.SERIAL_PREFIX}XXXX-XXXX-XXXX"),
+                Font = new Font("Segoe UI", 8, FontStyle.Italic),
+                ForeColor = Color.FromArgb(100, 100, 120),
+                Location = new Point(24, 160),
+                AutoSize = true
+            };
+            cardPanel.Controls.Add(lblFormat);
+
+            // Link
+            LinkLabel lnkSite = new LinkLabel
+            {
+                Text = "www.airdirector.app",
                 Font = new Font("Segoe UI", 9, FontStyle.Regular),
-                ForeColor = Color.FromArgb(100, 100, 110),
-                Location = new Point(20, 180),
-                Size = new Size(540, 40),
-                AutoSize = false
+                LinkColor = Color.FromArgb(0, 120, 212),
+                ActiveLinkColor = Color.FromArgb(0, 120, 212),
+                VisitedLinkColor = Color.FromArgb(0, 120, 212),
+                Location = new Point(24, 182),
+                AutoSize = true
             };
-
-            _statusLabel = new Label
+            lnkSite.LinkClicked += (s, e) =>
             {
-                Text = string.Empty,
-                Font = new Font("Segoe UI", 9, FontStyle.Regular),
-                ForeColor = Color.Red,
-                Location = new Point(20, 230),
-                Size = new Size(540, 40),
-                AutoSize = false
+                try { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("https://www.airdirector.app") { UseShellExecute = true }); }
+                catch { }
             };
+            cardPanel.Controls.Add(lnkSite);
 
-            _contentPanel.Controls.Add(_serialLabel);
-            _contentPanel.Controls.Add(_serialTextBox);
-            _contentPanel.Controls.Add(_ownerLabel);
-            _contentPanel.Controls.Add(_ownerTextBox);
-            _contentPanel.Controls.Add(_infoLabel);
-            _contentPanel.Controls.Add(_statusLabel);
-
-            // Buttons
-            _activateButton = new Button
+            // ===== ACTIVATE BUTTON =====
+            int btnActivateTop = cardTop + cardPanel.Height + margin;
+            Button btnActivate = new Button
             {
-                Text = LanguageManager.GetString("License.Activate", "Activate"),
-                Font = new Font("Segoe UI", 10, FontStyle.Bold),
-                BackColor = Color.FromArgb(0, 120, 212),
+                Name = "btnActivate",
+                Text = "🔓  " + LanguageManager.GetString("License.Activate", "Activate License"),
+                Font = new Font("Segoe UI", 13, FontStyle.Bold),
+                Location = new Point(margin, btnActivateTop),
+                Size = new Size(580, 52),
+                BackColor = Color.FromArgb(40, 167, 69),
                 ForeColor = Color.White,
                 FlatStyle = FlatStyle.Flat,
-                Size = new Size(140, 40),
-                Location = new Point(460, 410),
-                Cursor = Cursors.Hand,
-                Anchor = AnchorStyles.Bottom | AnchorStyles.Right
+                Cursor = Cursors.Hand
             };
-            _activateButton.FlatAppearance.BorderSize = 0;
-            _activateButton.Click += ActivateButton_Click;
+            btnActivate.FlatAppearance.BorderSize = 0;
+            btnActivate.Click += (s, e) => BtnActivate_Click(txtOwner.Text, txtSerial.Text);
+            this.Controls.Add(btnActivate);
 
-            _cancelButton = new Button
+            // ===== INFO LABEL =====
+            int infoTop = btnActivateTop + btnActivate.Height + 14;
+            Label lblInfo = new Label
             {
-                Text = LanguageManager.GetString("License.Cancel", "Cancel"),
-                Font = new Font("Segoe UI", 10),
-                BackColor = Color.FromArgb(230, 230, 235),
-                ForeColor = Color.FromArgb(40, 40, 50),
-                FlatStyle = FlatStyle.Flat,
-                Size = new Size(120, 40),
-                Location = new Point(320, 410),
-                Cursor = Cursors.Hand,
-                Anchor = AnchorStyles.Bottom | AnchorStyles.Right
+                Text = LanguageManager.GetString("License.Info", "AirADV requires a valid license to work.\nPurchase your license at store.airdirector.app"),
+                Font = new Font("Segoe UI", 8, FontStyle.Italic),
+                ForeColor = Color.FromArgb(100, 100, 120),
+                Location = new Point(margin, infoTop),
+                Size = new Size(580, 36),
+                TextAlign = ContentAlignment.MiddleCenter
             };
-            _cancelButton.FlatAppearance.BorderSize = 0;
-            _cancelButton.Click += (s, e) => { this.DialogResult = DialogResult.Cancel; this.Close(); };
+            this.Controls.Add(lblInfo);
 
-            this.Controls.Add(_headerPanel);
-            this.Controls.Add(_contentPanel);
-            this.Controls.Add(_activateButton);
-            this.Controls.Add(_cancelButton);
-
-            this.AcceptButton = _activateButton;
-            this.CancelButton = _cancelButton;
+            // Adjust client height based on content
+            this.ClientSize = new Size(620, infoTop + lblInfo.Height + margin);
         }
 
-        private void ActivateButton_Click(object? sender, EventArgs e)
+        private void BtnActivate_Click(string ownerName, string serial)
         {
-            string serial = _serialTextBox.Text.Trim();
-            string owner = _ownerTextBox.Text.Trim();
-
-            _statusLabel.ForeColor = Color.Red;
-            _statusLabel.Text = string.Empty;
-            _activateButton.Enabled = false;
-
-            try
+            if (string.IsNullOrWhiteSpace(serial))
             {
-                bool ok = LicenseManager.ActivateLicense(serial, owner, out string errorMessage);
-                if (ok)
-                {
-                    _statusLabel.ForeColor = Color.FromArgb(40, 167, 69);
-                    _statusLabel.Text = LanguageManager.GetString("License.ActivationSuccess", "License activated successfully!");
-                    this.DialogResult = DialogResult.OK;
-                    this.Close();
-                }
-                else
-                {
-                    _statusLabel.Text = errorMessage;
-                    _activateButton.Enabled = true;
-                }
+                MessageBox.Show(
+                    LanguageManager.GetString("License.Required", "Please enter the serial code"),
+                    LanguageManager.GetString("Common.Error", "Error"),
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
             }
-            catch (Exception ex)
+
+            bool success = LicenseManager.ActivateLicense(serial, ownerName, out string errorMessage);
+
+            if (success)
             {
-                _statusLabel.Text = ex.Message;
-                _activateButton.Enabled = true;
+                MessageBox.Show(
+                    LanguageManager.GetString("License.Success", "License activated successfully!"),
+                    LanguageManager.GetString("Common.Success", "Success"),
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information
+                );
+
+                this.DialogResult = DialogResult.OK;
+                this.Close();
+            }
+            else
+            {
+                MessageBox.Show(
+                    LanguageManager.GetString("License.Error", "Error during activation") + ":\n\n" + errorMessage,
+                    LanguageManager.GetString("Common.Error", "Error"),
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error
+                );
             }
         }
     }
