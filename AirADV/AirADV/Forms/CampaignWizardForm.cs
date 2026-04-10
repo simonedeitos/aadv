@@ -25,6 +25,7 @@ namespace AirADV.Forms
 
         private DataGridView dgvSchedule;
         private List<string> _availableTimeSlots;
+        private Label lblManualSlotCount;
 
         public CampaignWizardForm(int stationID)
         {
@@ -82,11 +83,7 @@ namespace AirADV.Forms
             _stationID = stationID;
             _campaign = existingCampaign;
 
-            if (!string.IsNullOrEmpty(existingCampaign.ManualSlots))
-            {
-                _selectedSpotIDs.Add(existingCampaign.SpotID);
-            }
-            else
+            if (existingCampaign.SpotID > 0)
             {
                 _selectedSpotIDs.Add(existingCampaign.SpotID);
             }
@@ -772,6 +769,20 @@ namespace AirADV.Forms
                     dtpTimeTo.Value = DateTime.Today.Add(TimeSpan.Parse(_campaign.TimeTo));
                 }
 
+                // Restore manual slot checkboxes when editing a manual campaign
+                if (_campaign.DistributionMode == "MANUAL" && !string.IsNullOrEmpty(_campaign.ManualSlots))
+                {
+                    var savedSlots = _campaign.ManualSlots.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
+                    foreach (Control ctrl in flowManualSlots.Controls)
+                    {
+                        if (ctrl is CheckBox chk && chk.Tag != null)
+                        {
+                            chk.Checked = savedSlots.Contains(chk.Tag.ToString());
+                        }
+                    }
+                    Console.WriteLine($"[CampaignWizard] ✅ Ripristinati {savedSlots.Length} slot manuali");
+                }
+
                 LoadExistingSchedule();
 
                 Console.WriteLine($"[CampaignWizard] ✅ Caricata campagna esistente: {_campaign.CampaignName}");
@@ -879,13 +890,23 @@ namespace AirADV.Forms
 
                 System.Threading.Tasks.Task.Delay(100).ContinueWith(_ =>
                 {
-                    this.Invoke((MethodInvoker)delegate
+                    try
                     {
-                        pnlStep3.Enabled = true;
-                        dgvSchedule.Enabled = true;
-                        lblStep3Title.BackColor = Color.FromArgb(40, 167, 69);
-                        lblStep3Title.Text = LanguageManager.Get("CampaignWizard.Step3Active", "✅ STEP 3: Revisione e Modifica Schedulazione");
-                    });
+                        if (!this.IsDisposed && !this.Disposing)
+                        {
+                            this.Invoke((MethodInvoker)delegate
+                            {
+                                pnlStep3.Enabled = true;
+                                dgvSchedule.Enabled = true;
+                                lblStep3Title.BackColor = Color.FromArgb(40, 167, 69);
+                                lblStep3Title.Text = LanguageManager.Get("CampaignWizard.Step3Active", "✅ STEP 3: Revisione e Modifica Schedulazione");
+                            });
+                        }
+                    }
+                    catch (ObjectDisposedException)
+                    {
+                        // Form was closed before the delayed task completed — safe to ignore
+                    }
                 });
 
                 Console.WriteLine($"[CampaignWizard] ✅ Schedulazione esistente caricata");
@@ -1074,6 +1095,18 @@ namespace AirADV.Forms
 
             flowManualSlots.Controls.Clear();
 
+            // Add counter label at the top of the manual slots panel
+            lblManualSlotCount = new Label
+            {
+                Name = "lblManualSlotCount",
+                Text = LanguageManager.Get("CampaignWizard.ManualSlotCount", "Slot selezionati: 0"),
+                AutoSize = true,
+                Font = new Font("Segoe UI", 9F, FontStyle.Bold),
+                ForeColor = Color.FromArgb(0, 123, 255),
+                Margin = new Padding(5, 5, 5, 10)
+            };
+            flowManualSlots.Controls.Add(lblManualSlotCount);
+
             foreach (var slot in timeSlots)
             {
                 var chk = new CheckBox
@@ -1084,7 +1117,31 @@ namespace AirADV.Forms
                     Margin = new Padding(5),
                     Font = new Font("Segoe UI", 9F)
                 };
+                chk.CheckedChanged += ManualSlotCheckBox_CheckedChanged;
                 flowManualSlots.Controls.Add(chk);
+            }
+        }
+
+        private void ManualSlotCheckBox_CheckedChanged(object sender, EventArgs e)
+        {
+            UpdateManualSlotCount();
+        }
+
+        private void UpdateManualSlotCount()
+        {
+            int selectedCount = 0;
+            foreach (Control ctrl in flowManualSlots.Controls)
+            {
+                if (ctrl is CheckBox chk && chk.Checked)
+                    selectedCount++;
+            }
+
+            if (lblManualSlotCount != null)
+            {
+                lblManualSlotCount.Text = string.Format(
+                    LanguageManager.Get("CampaignWizard.ManualSlotCount", "Slot selezionati: {0}"),
+                    selectedCount
+                );
             }
         }
 
@@ -1156,6 +1213,20 @@ namespace AirADV.Forms
 
         private bool ValidateStep2()
         {
+            // Day-of-week validation applies to all modes
+            if (!chkMonday.Checked && !chkTuesday.Checked && !chkWednesday.Checked &&
+                !chkThursday.Checked && !chkFriday.Checked && !chkSaturday.Checked && !chkSunday.Checked)
+            {
+                MessageBox.Show(
+                    LanguageManager.Get("CampaignWizard.ErrorDays", "Seleziona almeno un giorno della settimana!"),
+                    LanguageManager.Get("Common.Warning", "Attenzione"),
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning
+                );
+                pnlMainContainer.AutoScrollPosition = new Point(0, pnlStep2.Top - 20);
+                return false;
+            }
+
             if (rdAutoBalanced.Checked || rdAutoAudience.Checked)
             {
                 if (numDailyPasses.Value <= 0)
@@ -1183,19 +1254,6 @@ namespace AirADV.Forms
                         pnlMainContainer.AutoScrollPosition = new Point(0, pnlStep2.Top - 20);
                         return false;
                     }
-                }
-
-                if (!chkMonday.Checked && !chkTuesday.Checked && !chkWednesday.Checked &&
-                    !chkThursday.Checked && !chkFriday.Checked && !chkSaturday.Checked && !chkSunday.Checked)
-                {
-                    MessageBox.Show(
-                        LanguageManager.Get("CampaignWizard.ErrorDays", "Seleziona almeno un giorno della settimana!"),
-                        LanguageManager.Get("Common.Warning", "Attenzione"),
-                        MessageBoxButtons.OK,
-                        MessageBoxIcon.Warning
-                    );
-                    pnlMainContainer.AutoScrollPosition = new Point(0, pnlStep2.Top - 20);
-                    return false;
                 }
             }
             else if (rdManual.Checked)
@@ -1228,6 +1286,15 @@ namespace AirADV.Forms
 
         private void SaveStep2Data()
         {
+            // Always save day-of-week flags regardless of distribution mode
+            _campaign.Monday = chkMonday.Checked;
+            _campaign.Tuesday = chkTuesday.Checked;
+            _campaign.Wednesday = chkWednesday.Checked;
+            _campaign.Thursday = chkThursday.Checked;
+            _campaign.Friday = chkFriday.Checked;
+            _campaign.Saturday = chkSaturday.Checked;
+            _campaign.Sunday = chkSunday.Checked;
+
             if (rdManual.Checked)
             {
                 var selectedSlots = new List<string>();
@@ -1239,7 +1306,7 @@ namespace AirADV.Forms
                     }
                 }
                 _campaign.ManualSlots = string.Join(";", selectedSlots);
-                _campaign.DailyPasses = 0;
+                _campaign.DailyPasses = selectedSlots.Count;
                 _campaign.TimeFrom = "00:00:00";
                 _campaign.TimeTo = "23:59:59";
             }
@@ -1258,13 +1325,6 @@ namespace AirADV.Forms
                     _campaign.TimeTo = "23:59:59";
                 }
 
-                _campaign.Monday = chkMonday.Checked;
-                _campaign.Tuesday = chkTuesday.Checked;
-                _campaign.Wednesday = chkWednesday.Checked;
-                _campaign.Thursday = chkThursday.Checked;
-                _campaign.Friday = chkFriday.Checked;
-                _campaign.Saturday = chkSaturday.Checked;
-                _campaign.Sunday = chkSunday.Checked;
                 _campaign.ManualSlots = "";
             }
 
@@ -1834,9 +1894,9 @@ namespace AirADV.Forms
 
         private void DgvSchedule_DataError(object sender, DataGridViewDataErrorEventArgs e)
         {
-            Console.WriteLine($"[CampaignWizard] DataError - Row: {e.RowIndex}, Col: {e.ColumnIndex}");
+            Console.WriteLine($"[CampaignWizard] DataError - Row: {e.RowIndex}, Col: {e.ColumnIndex}, Error: {e.Exception?.Message}");
             e.ThrowException = false;
-            e.Cancel = false;
+            e.Cancel = true;
         }
 
         private void DgvSchedule_CurrentCellDirtyStateChanged(object sender, EventArgs e)
@@ -1868,7 +1928,7 @@ namespace AirADV.Forms
                         MessageBoxIcon.Warning
                     );
 
-                    LoadScheduleGrid();
+                    BeginInvoke((MethodInvoker)delegate { LoadScheduleGrid(); });
                     return;
                 }
 
