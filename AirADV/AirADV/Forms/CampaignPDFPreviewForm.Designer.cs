@@ -12,6 +12,11 @@
         private System.Windows.Forms.Button btnZoomIn;
         private System.Windows.Forms.Button btnZoomOut;
         private System.Windows.Forms.Button btnClose;
+        private System.Windows.Forms.Button btnFirstPage;
+        private System.Windows.Forms.Button btnPrevPage;
+        private System.Windows.Forms.Label lblPageInfo;
+        private System.Windows.Forms.Button btnNextPage;
+        private System.Windows.Forms.Button btnLastPage;
         // ✅ FIX:  Variabile membro rinominata per coerenza
         private System.Windows.Forms.PrintPreviewControl _previewControl;
 
@@ -31,6 +36,11 @@
             panelButtons = new System.Windows.Forms.Panel();
             btnSavePDF = new System.Windows.Forms.Button();
             btnPrint = new System.Windows.Forms.Button();
+            btnFirstPage = new System.Windows.Forms.Button();
+            btnPrevPage = new System.Windows.Forms.Button();
+            lblPageInfo = new System.Windows.Forms.Label();
+            btnNextPage = new System.Windows.Forms.Button();
+            btnLastPage = new System.Windows.Forms.Button();
             btnZoomIn = new System.Windows.Forms.Button();
             btnZoomOut = new System.Windows.Forms.Button();
             btnClose = new System.Windows.Forms.Button();
@@ -72,6 +82,11 @@
             panelButtons.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             panelButtons.Controls.Add(btnSavePDF);
             panelButtons.Controls.Add(btnPrint);
+            panelButtons.Controls.Add(btnFirstPage);
+            panelButtons.Controls.Add(btnPrevPage);
+            panelButtons.Controls.Add(lblPageInfo);
+            panelButtons.Controls.Add(btnNextPage);
+            panelButtons.Controls.Add(btnLastPage);
             panelButtons.Controls.Add(btnZoomIn);
             panelButtons.Controls.Add(btnZoomOut);
             panelButtons.Controls.Add(btnClose);
@@ -112,6 +127,82 @@
             btnPrint.Text = "🖨️ Stampa";
             btnPrint.UseVisualStyleBackColor = false;
             btnPrint.Click += btnPrint_Click;
+
+            // 
+            // btnFirstPage
+            // 
+            btnFirstPage.BackColor = System.Drawing.Color.FromArgb(108, 117, 125);
+            btnFirstPage.FlatAppearance.BorderSize = 0;
+            btnFirstPage.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            btnFirstPage.Font = new System.Drawing.Font("Segoe UI", 13F, System.Drawing.FontStyle.Bold);
+            btnFirstPage.ForeColor = System.Drawing.Color.White;
+            btnFirstPage.Location = new System.Drawing.Point(440, 15);
+            btnFirstPage.Name = "btnFirstPage";
+            btnFirstPage.Size = new System.Drawing.Size(50, 50);
+            btnFirstPage.TabIndex = 5;
+            btnFirstPage.Text = "⏮";
+            btnFirstPage.UseVisualStyleBackColor = false;
+            btnFirstPage.Click += btnFirstPage_Click;
+
+            // 
+            // btnPrevPage
+            // 
+            btnPrevPage.BackColor = System.Drawing.Color.FromArgb(108, 117, 125);
+            btnPrevPage.FlatAppearance.BorderSize = 0;
+            btnPrevPage.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            btnPrevPage.Font = new System.Drawing.Font("Segoe UI", 13F, System.Drawing.FontStyle.Bold);
+            btnPrevPage.ForeColor = System.Drawing.Color.White;
+            btnPrevPage.Location = new System.Drawing.Point(500, 15);
+            btnPrevPage.Name = "btnPrevPage";
+            btnPrevPage.Size = new System.Drawing.Size(50, 50);
+            btnPrevPage.TabIndex = 6;
+            btnPrevPage.Text = "◀";
+            btnPrevPage.UseVisualStyleBackColor = false;
+            btnPrevPage.Click += btnPrevPage_Click;
+
+            // 
+            // lblPageInfo
+            // 
+            lblPageInfo.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
+            lblPageInfo.ForeColor = System.Drawing.Color.FromArgb(50, 50, 50);
+            lblPageInfo.Location = new System.Drawing.Point(560, 15);
+            lblPageInfo.Name = "lblPageInfo";
+            lblPageInfo.Size = new System.Drawing.Size(150, 50);
+            lblPageInfo.TabIndex = 7;
+            lblPageInfo.Text = "Pagina 1 / 1";
+            lblPageInfo.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+
+            // 
+            // btnNextPage
+            // 
+            btnNextPage.BackColor = System.Drawing.Color.FromArgb(108, 117, 125);
+            btnNextPage.FlatAppearance.BorderSize = 0;
+            btnNextPage.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            btnNextPage.Font = new System.Drawing.Font("Segoe UI", 13F, System.Drawing.FontStyle.Bold);
+            btnNextPage.ForeColor = System.Drawing.Color.White;
+            btnNextPage.Location = new System.Drawing.Point(720, 15);
+            btnNextPage.Name = "btnNextPage";
+            btnNextPage.Size = new System.Drawing.Size(50, 50);
+            btnNextPage.TabIndex = 8;
+            btnNextPage.Text = "▶";
+            btnNextPage.UseVisualStyleBackColor = false;
+            btnNextPage.Click += btnNextPage_Click;
+
+            // 
+            // btnLastPage
+            // 
+            btnLastPage.BackColor = System.Drawing.Color.FromArgb(108, 117, 125);
+            btnLastPage.FlatAppearance.BorderSize = 0;
+            btnLastPage.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            btnLastPage.Font = new System.Drawing.Font("Segoe UI", 13F, System.Drawing.FontStyle.Bold);
+            btnLastPage.ForeColor = System.Drawing.Color.White;
+            btnLastPage.Location = new System.Drawing.Point(780, 15);
+            btnLastPage.Name = "btnLastPage";
+            btnLastPage.Size = new System.Drawing.Size(50, 50);
+            btnLastPage.TabIndex = 9;
+            btnLastPage.Text = "⏭";
+            btnLastPage.UseVisualStyleBackColor = false;
+            btnLastPage.Click += btnLastPage_Click;
 
             // 
             // btnZoomIn

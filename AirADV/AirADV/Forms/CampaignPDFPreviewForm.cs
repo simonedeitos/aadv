@@ -20,6 +20,7 @@ namespace AirADV.Forms
 
         private PrintDocument _printDocument;
         private int _currentPage = 0;
+        private int _totalPages = 1;
         private const int ITEMS_PER_PAGE = 25;
 
         private Dictionary<int, string> _spotLetters;
@@ -124,6 +125,8 @@ namespace AirADV.Forms
         {
             try
             {
+                _totalPages = Math.Max(1, (int)Math.Ceiling((double)_dailySchedules.Count / ITEMS_PER_PAGE));
+
                 ApplyLanguage();
 
                 _previewControl.Document = _printDocument;
@@ -185,9 +188,15 @@ namespace AirADV.Forms
                 // ✅ Bottoni
                 btnSavePDF.Text = LanguageManager.Get("PDFPreview.BtnSavePDF", "💾 Salva PDF");
                 btnPrint.Text = LanguageManager.Get("PDFPreview.BtnPrint", "🖨️ Stampa");
+                btnFirstPage.Text = LanguageManager.Get("PDFPreview.BtnFirstPage", "⏮");
+                btnPrevPage.Text = LanguageManager.Get("PDFPreview.BtnPrevPage", "◀");
+                btnNextPage.Text = LanguageManager.Get("PDFPreview.BtnNextPage", "▶");
+                btnLastPage.Text = LanguageManager.Get("PDFPreview.BtnLastPage", "⏭");
                 btnZoomIn.Text = LanguageManager.Get("PDFPreview.BtnZoomIn", "🔍+");
                 btnZoomOut.Text = LanguageManager.Get("PDFPreview.BtnZoomOut", "🔍-");
                 btnClose.Text = LanguageManager.Get("Common.Close", "✖ Chiudi");
+
+                UpdatePageInfo();
 
                 // ✅ Refresh anteprima per riapplicare lingua nel documento
                 if (_previewControl.Document != null)
@@ -763,6 +772,50 @@ namespace AirADV.Forms
         private void btnClose_Click(object sender, EventArgs e)
         {
             this.Close();
+        }
+
+        private void btnFirstPage_Click(object sender, EventArgs e)
+        {
+            _previewControl.StartPage = 0;
+            UpdatePageInfo();
+        }
+
+        private void btnPrevPage_Click(object sender, EventArgs e)
+        {
+            if (_previewControl.StartPage > 0)
+            {
+                _previewControl.StartPage--;
+                UpdatePageInfo();
+            }
+        }
+
+        private void btnNextPage_Click(object sender, EventArgs e)
+        {
+            if (_previewControl.StartPage < _totalPages - 1)
+            {
+                _previewControl.StartPage++;
+                UpdatePageInfo();
+            }
+        }
+
+        private void btnLastPage_Click(object sender, EventArgs e)
+        {
+            _previewControl.StartPage = _totalPages - 1;
+            UpdatePageInfo();
+        }
+
+        private void UpdatePageInfo()
+        {
+            if (_previewControl == null) return;
+            int currentPage = _previewControl.StartPage + 1;
+            lblPageInfo.Text = string.Format(
+                LanguageManager.Get("PDFPreview.PageInfo", "Pagina {0} / {1}"),
+                currentPage, _totalPages
+            );
+            btnFirstPage.Enabled = _previewControl.StartPage > 0;
+            btnPrevPage.Enabled = _previewControl.StartPage > 0;
+            btnNextPage.Enabled = _previewControl.StartPage < _totalPages - 1;
+            btnLastPage.Enabled = _previewControl.StartPage < _totalPages - 1;
         }
 
         private void btnZoomIn_Click(object sender, EventArgs e)
