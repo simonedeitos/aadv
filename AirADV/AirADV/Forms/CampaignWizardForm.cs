@@ -25,6 +25,7 @@ namespace AirADV.Forms
 
         private bool _isLoadingData = false;
 
+        private bool _isTemplate = false;
         private DataGridView dgvSchedule;
         private List<string> _availableTimeSlots;
 
@@ -90,10 +91,19 @@ namespace AirADV.Forms
             }
 
             this.Load += CampaignWizardForm_Load;
-            this.Text = string.Format(
-                LanguageManager.Get("CampaignWizard.EditTitle", "✏️ Modifica Campagna - {0}"),
-                existingCampaign.CampaignName
-            );
+
+            if (existingCampaign.ID == 0)
+            {
+                // Template/duplicate: treat as new campaign with pre-populated data
+                _isTemplate = true;
+            }
+            else
+            {
+                this.Text = string.Format(
+                    LanguageManager.Get("CampaignWizard.EditTitle", "✏️ Modifica Campagna - {0}"),
+                    existingCampaign.CampaignName
+                );
+            }
         }
 
         private void InitializeAdvancedOptions()
@@ -248,6 +258,10 @@ namespace AirADV.Forms
                 if (_campaign.ID > 0)
                 {
                     LoadExistingCampaignData();
+                }
+                else if (_isTemplate)
+                {
+                    PrePopulateFromTemplate();
                 }
 
                 if (!chkTimeFilter.Checked)
@@ -420,23 +434,34 @@ namespace AirADV.Forms
 
                 if (_campaign.ID == 0)
                 {
-                    var campaigns = DbcManager.Load<DbcManager.Campaign>("ADV_Campaigns.dbc");
-                    int maxNumber = 0;
+                    var counters = DbcManager.Load<DbcManager.CampaignCounter>("ADV_CampaignCounter.dbc");
+                    int lastNumber = 0;
 
-                    foreach (var c in campaigns)
+                    if (counters.Count > 0)
                     {
-                        if (c.CampaignCode.StartsWith("CAMP-"))
+                        lastNumber = counters[0].LastNumber;
+                    }
+                    else
+                    {
+                        // Migration: determine highest number from existing campaigns
+                        var campaigns = DbcManager.Load<DbcManager.Campaign>("ADV_Campaigns.dbc");
+                        foreach (var c in campaigns)
                         {
-                            string numberPart = c.CampaignCode.Substring(5);
-                            if (int.TryParse(numberPart, out int number))
+                            if (c.CampaignCode.StartsWith("CAMP-"))
                             {
-                                if (number > maxNumber)
-                                    maxNumber = number;
+                                string numberPart = c.CampaignCode.Substring(5);
+                                if (int.TryParse(numberPart, out int number) && number > lastNumber)
+                                    lastNumber = number;
                             }
                         }
                     }
 
-                    _campaign.CampaignCode = $"CAMP-{(maxNumber + 1):D3}";
+                    lastNumber++;
+                    _campaign.CampaignCode = $"CAMP-{lastNumber:D3}";
+
+                    // Persist updated counter
+                    var counter = new DbcManager.CampaignCounter { ID = 1, LastNumber = lastNumber };
+                    DbcManager.Save("ADV_CampaignCounter.dbc", new List<DbcManager.CampaignCounter> { counter });
                 }
 
                 Console.WriteLine($"[CampaignWizard] Step1 salvato - Cliente: {_campaign.ClientID}, Spot: {_campaign.SpotID}, Categoria: {_campaign.CategoryID}");
@@ -833,7 +858,105 @@ namespace AirADV.Forms
             }
         }
 
-        private void LoadExistingSpots()
+        private void PrePopulateFromTemplate()
+        {
+            _isLoadingData = true;
+            try
+            {
+                Console.WriteLine($"[CampaignWizard] 🔄 Pre-populating from template: {_campaign.CampaignName}");
+
+                txtCampaignName.Text = _campaign.CampaignName;
+
+                for (int i = 0; i < cmbClient.Items.Count; i++)
+                {
+                    if (cmbClient.Items[i] is DbcManager.Client client && client.ID == _campaign.ClientID)
+                    {
+                        cmbClient.SelectedIndex = i;
+                        break;
+                    }
+                }
+
+                for (int i = 0; i < cmbCategory.Items.Count; i++)
+                {
+                    if (cmbCategory.Items[i] is DbcManager.Category category && category.ID == _campaign.CategoryID)
+                    {
+                        cmbCategory.SelectedIndex = i;
+                        break;
+                    }
+                }
+
+                // Dates are reset for the duplicate: start today, end in one month
+                dtpStartDate.Value = DateTime.Today;
+                dtpEndDate.Value = DateTime.Today.AddMonths(1);
+
+                UpdateSpotList();
+
+                if (_campaign.DailyPasses >= (int)numDailyPasses.Minimum)
+                    numDailyPasses.Value = _campaign.DailyPasses;
+                else
+                    numDailyPasses.Value = numDailyPasses.Minimum;
+
+                if (_campaign.DistributionMode == "BALANCED")
+                    rdAutoBalanced.Checked = true;
+                else if (_campaign.DistributionMode == "AUDIENCE")
+                    rdAutoAudience.Checked = true;
+                else if (_campaign.DistributionMode == "MANUAL")
+                    rdManual.Checked = true;
+
+                if (_campaign.DistributionMode == "MANUAL")
+                {
+                    int manualMax = _campaign.DailyPasses > 0 ? _campaign.DailyPasses : 1;
+                    if (manualMax >= (int)numManualDailyPasses.Minimum && manualMax <= (int)numManualDailyPasses.Maximum)
+                        numManualDailyPasses.Value = manualMax;
+                    else
+                        numManualDailyPasses.Value = numManualDailyPasses.Minimum;
+                }
+
+                chkMonday.Checked = _campaign.Monday;
+                chkTuesday.Checked = _campaign.Tuesday;
+                chkWednesday.Checked = _campaign.Wednesday;
+                chkThursday.Checked = _campaign.Thursday;
+                chkFriday.Checked = _campaign.Friday;
+                chkSaturday.Checked = _campaign.Saturday;
+                chkSunday.Checked = _campaign.Sunday;
+
+                if (_campaign.TimeFrom != "00:00:00" || _campaign.TimeTo != "23:59:59")
+                {
+                    chkTimeFilter.Checked = true;
+                    try { dtpTimeFrom.Value = DateTime.Today.Add(TimeSpan.Parse(_campaign.TimeFrom)); }
+                    catch (Exception ex2) { Console.WriteLine($"[CampaignWizard] ⚠️ dtpTimeFrom parse error: {ex2.Message}"); }
+                    try { dtpTimeTo.Value = DateTime.Today.Add(TimeSpan.Parse(_campaign.TimeTo)); }
+                    catch (Exception ex2) { Console.WriteLine($"[CampaignWizard] ⚠️ dtpTimeTo parse error: {ex2.Message}"); }
+                }
+
+                if (_campaign.DistributionMode == "MANUAL" && !string.IsNullOrEmpty(_campaign.ManualSlots))
+                {
+                    var savedSlots = _campaign.ManualSlots.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
+                    foreach (Control ctrl in flowManualSlots.Controls)
+                    {
+                        if (ctrl is CheckBox chk && chk.Tag != null)
+                        {
+                            chk.Checked = savedSlots.Contains(chk.Tag.ToString());
+                        }
+                    }
+                    Console.WriteLine($"[CampaignWizard] ✅ Ripristinati {savedSlots.Length} slot manuali dal template");
+                }
+
+                Console.WriteLine($"[CampaignWizard] ✅ Template pre-popolato: {_campaign.CampaignName}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[CampaignWizard] ❌ Errore PrePopulateFromTemplate: {ex.Message}");
+            }
+            finally
+            {
+                _isLoadingData = false;
+                UpdateDistributionMode();
+                UpdateManualSlotCount();
+            }
+        }
+
+
         {
             try
             {
