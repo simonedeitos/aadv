@@ -601,6 +601,7 @@ namespace AirADV.Forms
 				if (selectedSlots.Count == 0)
 				{
 					MessageBox.Show(
+						LanguageManager.Get("TimeSlots.NoSlotsSelected", "Nessun punto orario selezionato!"),
 						LanguageManager.Get("Common.Warning", "Attenzione"),
 						MessageBoxButtons.OK,
 						MessageBoxIcon.Warning
@@ -617,8 +618,11 @@ namespace AirADV.Forms
 
 				foreach (var slot in selectedSlots)
 				{
+					if (!string.IsNullOrEmpty(opening))
 						slot.OpeningFile = opening;
+					if (!string.IsNullOrEmpty(infraSpot))
 						slot.InfraSpotFile = infraSpot;
+					if (!string.IsNullOrEmpty(closing))
 						slot.ClosingFile = closing;
 					slot.MaxDuration = maxDuration;
 					slot.Priority = priority;
@@ -629,6 +633,7 @@ namespace AirADV.Forms
 
 				MessageBox.Show(
 					string.Format(
+						LanguageManager.Get("TimeSlots.ApplySuccess", "✅ Configurazione applicata a {0} punti orari!"),
 						selectedSlots.Count
 					),
 					LanguageManager.Get("Common.Success", "Successo"),
