@@ -3,6 +3,7 @@ using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using AirADV.Services;
+using AirADV.Services.Licensing;
 using AirADV.Services.Localization;
 
 namespace AirADV.Forms
@@ -25,6 +26,7 @@ namespace AirADV.Forms
                 _isLoading = true;
                 LoadSettings();
                 ApplyLanguage();
+                UpdateLicenseButtonsVisibility();
                 _isLoading = false;
                 _isDirty = false;
 
@@ -272,6 +274,7 @@ namespace AirADV.Forms
                 LoadAudioDevices();
 
                 // ✅ FORZA AGGIORNAMENTO VISIVO
+                UpdateLicenseButtonsVisibility();
                 this.Refresh();
                 tabMain.Refresh();
                 grpPaths.Refresh();
@@ -632,6 +635,7 @@ namespace AirADV.Forms
                 {
                     form.ShowDialog(this);
                 }
+                UpdateLicenseButtonsVisibility();
             }
             catch (Exception ex)
             {
@@ -652,6 +656,7 @@ namespace AirADV.Forms
                 {
                     form.ShowDialog(this);
                 }
+                UpdateLicenseButtonsVisibility();
             }
             catch (Exception ex)
             {
@@ -667,6 +672,13 @@ namespace AirADV.Forms
         // ═══════════════════════════════════════════════════════════
         // CLASSI HELPER
         // ═══════════════════════════════════════════════════════════
+
+        private void UpdateLicenseButtonsVisibility()
+        {
+            bool isLicensed = LicenseManager.IsLicenseValid();
+            btnLicenseActivate.Visible = !isLicensed;
+            btnLicenseRemove.Visible = isLicensed;
+        }
 
         private class LanguageItem
         {
