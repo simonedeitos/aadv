@@ -540,7 +540,7 @@ namespace AirADV.Forms
                     LanguageManager.Get("PDFPreview.ColPasses", "Pass."),
                     new Font("Segoe UI", 9, FontStyle.Bold),
                     Brushes.White,
-                    rightMargin - 70,
+                    rightMargin - colPassesWidth,
                     yPos + 5
                 );
 

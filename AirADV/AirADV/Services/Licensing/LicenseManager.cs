@@ -70,9 +70,10 @@ namespace AirADV.Services.Licensing
 
         private static (byte[] key, byte[] iv) DeriveKeyAndIV()
         {
-            using var kdf = new Rfc2898DeriveBytes(
-                EncPassphrase, EncSalt, PBKDF2_ITERATIONS, HashAlgorithmName.SHA256);
-            return (kdf.GetBytes(32), kdf.GetBytes(16));
+            byte[] passphraseBytes = System.Text.Encoding.UTF8.GetBytes(EncPassphrase);
+            byte[] derivedBytes = Rfc2898DeriveBytes.Pbkdf2(
+                passphraseBytes, EncSalt, PBKDF2_ITERATIONS, HashAlgorithmName.SHA256, 48);
+            return (derivedBytes[..32], derivedBytes[32..48]);
         }
 
         private static string EncryptLicense(string plainText)

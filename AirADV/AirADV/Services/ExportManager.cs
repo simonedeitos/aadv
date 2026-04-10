@@ -3,8 +3,13 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using iTextSharp.text;
-using iTextSharp.text.pdf;
+using iText.Kernel.Pdf;
+using iText.Layout;
+using iText.Layout.Element;
+using iText.Layout.Properties;
+using iText.IO.Image;
+using iText.Kernel.Font;
+using iText.IO.Font.Constants;
 using AirADV.Services;
 
 namespace AirADV.Services
@@ -42,19 +47,20 @@ namespace AirADV.Services
                     .ThenBy(s => s.SlotTime)
                     .ToList();
 
-                Document doc = new Document(PageSize.A4, 50, 50, 50, 50);
-                PdfWriter.GetInstance(doc, new FileStream(outputPath, FileMode.Create));
-
-                doc.Open();
+                using var stream = new FileStream(outputPath, FileMode.Create);
+                using var writer = new PdfWriter(stream);
+                using var pdf = new PdfDocument(writer);
+                using var doc = new Document(pdf);
 
                 // Logo
                 if (!string.IsNullOrEmpty(station?.LogoPath) && File.Exists(station.LogoPath))
                 {
                     try
                     {
-                        iTextSharp.text.Image logo = iTextSharp.text.Image.GetInstance(station.LogoPath);
+                        ImageData imageData = ImageDataFactory.Create(station.LogoPath);
+                        iText.Layout.Element.Image logo = new iText.Layout.Element.Image(imageData);
                         logo.ScaleToFit(200f, 60f);
-                        logo.Alignment = Element.ALIGN_CENTER;
+                        logo.SetHorizontalAlignment(HorizontalAlignment.CENTER);
                         doc.Add(logo);
                     }
                     catch (Exception ex)
@@ -64,60 +70,66 @@ namespace AirADV.Services
                 }
 
                 // Titolo
-                iTextSharp.text.Font titleFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 18);
-                Paragraph title = new Paragraph(station?.StationName ?? "EMITTENTE", titleFont);
-                title.Alignment = Element.ALIGN_CENTER;
-                title.SpacingAfter = 10f;
+                PdfFont titleFontPdf = PdfFontFactory.CreateFont(StandardFonts.HELVETICA_BOLD);
+                Paragraph title = new Paragraph(station?.StationName ?? "EMITTENTE")
+                    .SetFont(titleFontPdf)
+                    .SetFontSize(18)
+                    .SetTextAlignment(TextAlignment.CENTER)
+                    .SetMarginBottom(10f);
                 doc.Add(title);
 
-                iTextSharp.text.Font subtitleFont = FontFactory.GetFont(FontFactory.HELVETICA, 14);
-                Paragraph subtitle = new Paragraph("PALINSESTO PUBBLICITARIO", subtitleFont);
-                subtitle.Alignment = Element.ALIGN_CENTER;
-                subtitle.SpacingAfter = 20f;
+                PdfFont subtitleFontPdf = PdfFontFactory.CreateFont(StandardFonts.HELVETICA);
+                Paragraph subtitle = new Paragraph("PALINSESTO PUBBLICITARIO")
+                    .SetFont(subtitleFontPdf)
+                    .SetFontSize(14)
+                    .SetTextAlignment(TextAlignment.CENTER)
+                    .SetMarginBottom(20f);
                 doc.Add(subtitle);
 
                 // Info campagna
-                iTextSharp.text.Font normalFont = FontFactory.GetFont(FontFactory.HELVETICA, 10);
-                doc.Add(new Paragraph($"Cliente: {client?.ClientName ?? ""}", normalFont));
-                doc.Add(new Paragraph($"Azienda: {client?.CompanyName ?? ""}", normalFont));
-                doc.Add(new Paragraph($"Campagna: {campaign?.CampaignName ?? ""}", normalFont));
-                doc.Add(new Paragraph($"Spot:  {spot?.SpotTitle ?? ""} ({spot?.Duration ?? 0}s)", normalFont));
-                doc.Add(new Paragraph($"Periodo: {fromDate: dd/MM/yyyy} - {toDate:dd/MM/yyyy}", normalFont));
-                doc.Add(new Paragraph(" ", normalFont));
+                PdfFont normalFontPdf = PdfFontFactory.CreateFont(StandardFonts.HELVETICA);
+                doc.Add(new Paragraph($"Cliente: {client?.ClientName ?? ""}").SetFont(normalFontPdf).SetFontSize(10));
+                doc.Add(new Paragraph($"Azienda: {client?.CompanyName ?? ""}").SetFont(normalFontPdf).SetFontSize(10));
+                doc.Add(new Paragraph($"Campagna: {campaign?.CampaignName ?? ""}").SetFont(normalFontPdf).SetFontSize(10));
+                doc.Add(new Paragraph($"Spot:  {spot?.SpotTitle ?? ""} ({spot?.Duration ?? 0}s)").SetFont(normalFontPdf).SetFontSize(10));
+                doc.Add(new Paragraph($"Periodo: {fromDate:dd/MM/yyyy} - {toDate:dd/MM/yyyy}").SetFont(normalFontPdf).SetFontSize(10));
+                doc.Add(new Paragraph(" ").SetFont(normalFontPdf).SetFontSize(10));
 
                 // Palinsesto
                 var byDate = schedules.GroupBy(s => s.ScheduleDate.Date);
+                PdfFont dateFontPdf = PdfFontFactory.CreateFont(StandardFonts.HELVETICA_BOLD);
 
                 foreach (var dateGroup in byDate)
                 {
-                    iTextSharp.text.Font dateFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 12);
                     string dayName = dateGroup.Key.ToString("dddd", System.Globalization.CultureInfo.GetCultureInfo("it-IT"));
-                    Paragraph dateHeader = new Paragraph($"{dayName} {dateGroup.Key:dd/MM/yyyy}", dateFont);
-                    dateHeader.SpacingBefore = 10f;
-                    dateHeader.SpacingAfter = 5f;
+                    Paragraph dateHeader = new Paragraph($"{dayName} {dateGroup.Key:dd/MM/yyyy}")
+                        .SetFont(dateFontPdf)
+                        .SetFontSize(12)
+                        .SetMarginTop(10f)
+                        .SetMarginBottom(5f);
                     doc.Add(dateHeader);
 
                     foreach (var schedule in dateGroup)
                     {
-                        doc.Add(new Paragraph($"  {schedule.SlotTime}", normalFont));
+                        doc.Add(new Paragraph($"  {schedule.SlotTime}").SetFont(normalFontPdf).SetFontSize(10));
                     }
                 }
 
                 // Totali
-                doc.Add(new Paragraph(" ", normalFont));
-                iTextSharp.text.Font totalFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 10);
-                doc.Add(new Paragraph($"Totale Passaggi: {schedules.Count}", totalFont));
+                doc.Add(new Paragraph(" ").SetFont(normalFontPdf).SetFontSize(10));
+                PdfFont totalFontPdf = PdfFontFactory.CreateFont(StandardFonts.HELVETICA_BOLD);
+                doc.Add(new Paragraph($"Totale Passaggi: {schedules.Count}").SetFont(totalFontPdf).SetFontSize(10));
                 int totalSeconds = schedules.Sum(s => s.Duration);
-                doc.Add(new Paragraph($"Totale Secondi: {totalSeconds}s ({TimeSpan.FromSeconds(totalSeconds):mm\\:ss})", totalFont));
+                doc.Add(new Paragraph($"Totale Secondi: {totalSeconds}s ({TimeSpan.FromSeconds(totalSeconds):mm\\:ss})").SetFont(totalFontPdf).SetFontSize(10));
 
                 // Footer
-                doc.Add(new Paragraph(" ", normalFont));
-                iTextSharp.text.Font footerFont = FontFactory.GetFont(FontFactory.HELVETICA, 8);
-                Paragraph footer = new Paragraph($"Generato il: {DateTime.Now:dd/MM/yyyy HH:mm}\nAirADV - Gestionale Pubblicitario", footerFont);
-                footer.Alignment = Element.ALIGN_CENTER;
+                doc.Add(new Paragraph(" ").SetFont(normalFontPdf).SetFontSize(10));
+                PdfFont footerFontPdf = PdfFontFactory.CreateFont(StandardFonts.HELVETICA);
+                Paragraph footer = new Paragraph($"Generato il: {DateTime.Now:dd/MM/yyyy HH:mm}\nAirADV - Gestionale Pubblicitario")
+                    .SetFont(footerFontPdf)
+                    .SetFontSize(8)
+                    .SetTextAlignment(TextAlignment.CENTER);
                 doc.Add(footer);
-
-                doc.Close();
 
                 Console.WriteLine($"[ExportManager] PDF esportato: {outputPath}");
                 return true;

@@ -15,7 +15,6 @@ namespace AirADV.Forms
         private int _stationID;
         private List<DbcManager.Client> _clients = new List<DbcManager.Client>();
         private DbcManager.Client _selectedClient = null;
-        private bool _isDirty = false;
         private AudioManager _audioPlayer;
 
         // ═══════════════════════════════════════════════════════════

@@ -12,6 +12,7 @@ namespace AirADV.Services.Localization
     public static class LanguageManager
     {
         private static Dictionary<string, string> _strings = new Dictionary<string, string>();
+        private static Dictionary<string, string> _missingKeys = new Dictionary<string, string>();
         private static string _currentCulture = "it-IT";
         private static string _currentLanguageFileName = "Italian"; // ✅ NUOVO:  nome file corrente
         private static string _languagesPath = "";
@@ -19,7 +20,14 @@ namespace AirADV.Services.Localization
         public static event EventHandler LanguageChanged;
 
         public static string CurrentCulture => _currentCulture;
+        /// <summary>
+        /// Nome file lingua corrente (es: "Italian", "English")
+        /// </summary>
         public static string CurrentLanguageFileName => _currentLanguageFileName; // ✅ NUOVO
+        /// <summary>
+        /// Alias di CurrentLanguageFileName per compatibilità con pattern AirManager
+        /// </summary>
+        public static string CurrentLanguage => _currentLanguageFileName;
         public static string CurrentLanguageName { get; private set; } = "Italiano";
 
         /// <summary>
@@ -93,6 +101,7 @@ namespace AirADV.Services.Localization
             try
             {
                 _strings.Clear();
+                _missingKeys.Clear();
 
                 // Costruisci percorso completo
                 string filePath = Path.Combine(_languagesPath, $"{fileName}.ini");
@@ -214,12 +223,84 @@ namespace AirADV.Services.Localization
                 return _strings[key];
             }
 
+            // Traccia chiavi mancanti
+            string fallback = string.IsNullOrEmpty(defaultValue) ? key : defaultValue;
+            _missingKeys[key] = fallback;
+
             // Log solo in debug
 #if DEBUG
             Console.WriteLine($"[LanguageManager] ⚠️ Chiave mancante: {key}");
 #endif
 
-            return string.IsNullOrEmpty(defaultValue) ? key : defaultValue;
+            return fallback;
+        }
+
+        /// <summary>
+        /// Alias per compatibilità con pattern AirManager - chiama Get()
+        /// </summary>
+        public static string GetString(string key, string defaultValue = "")
+        {
+            return Get(key, defaultValue);
+        }
+
+        /// <summary>
+        /// Cambia la lingua e notifica l'evento LanguageChanged
+        /// </summary>
+        public static void SetLanguage(string languageName)
+        {
+            LoadLanguageByFileName(languageName);
+        }
+
+        /// <summary>
+        /// Restituisce il dizionario delle chiavi mancanti per diagnostica
+        /// </summary>
+        public static Dictionary<string, string> GetMissingKeys()
+        {
+            return new Dictionary<string, string>(_missingKeys);
+        }
+
+        /// <summary>
+        /// Salva le chiavi mancanti nel file lingua corrente sotto la sezione [MissingKeys]
+        /// </summary>
+        public static void SaveMissingKeysToFile()
+        {
+            if (_missingKeys.Count == 0 || string.IsNullOrEmpty(_languagesPath))
+                return;
+
+            try
+            {
+                string filePath = Path.Combine(_languagesPath, $"{_currentLanguageFileName}.ini");
+
+                if (!File.Exists(filePath))
+                {
+                    Console.WriteLine($"[LanguageManager] ⚠️ File non trovato per SaveMissingKeysToFile: {filePath}");
+                    return;
+                }
+
+                // Leggi contenuto esistente
+                string existing = File.ReadAllText(filePath, Encoding.UTF8);
+
+                // Rimuovi eventuale sezione [MissingKeys] precedente
+                int sectionIdx = existing.IndexOf("[MissingKeys]", StringComparison.Ordinal);
+                if (sectionIdx >= 0)
+                    existing = existing.Substring(0, sectionIdx).TrimEnd();
+
+                var sb = new StringBuilder(existing);
+                sb.AppendLine();
+                sb.AppendLine();
+                sb.AppendLine("[MissingKeys]");
+                foreach (var kvp in _missingKeys)
+                {
+                    sb.AppendLine($"{kvp.Key}={kvp.Value}");
+                }
+
+                File.WriteAllText(filePath, sb.ToString(), Encoding.UTF8);
+                Console.WriteLine($"[LanguageManager] ✅ Chiavi mancanti salvate: {_missingKeys.Count}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[LanguageManager] ❌ Errore SaveMissingKeysToFile: {ex.Message}");
+            }
         }
 
         /// <summary>
