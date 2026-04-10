@@ -51,6 +51,14 @@
         private System.Windows.Forms.Button btnBackupNow;
         private System.Windows.Forms.Button btnCleanOldBackups;
 
+        // Tab License
+        private System.Windows.Forms.TabPage tabLicense;
+        private System.Windows.Forms.GroupBox grpLicense;
+        private System.Windows.Forms.Label lblLicenseInfo;
+        private System.Windows.Forms.Button btnLicenseInfo;
+        private System.Windows.Forms.Button btnLicenseActivate;
+        private System.Windows.Forms.Button btnLicenseRemove;
+
         // Tab Audio
         private System.Windows.Forms.GroupBox grpAudioSettings;
         private System.Windows.Forms.Label lblOutputDevice;
@@ -81,6 +89,7 @@
             this.tabGeneral = new System.Windows.Forms.TabPage();
             this.tabPaths = new System.Windows.Forms.TabPage();
             this.tabBackup = new System.Windows.Forms.TabPage();
+            this.tabLicense = new System.Windows.Forms.TabPage();
             this.tabAudio = new System.Windows.Forms.TabPage();
 
             // Tab Generale
@@ -123,6 +132,13 @@
             this.btnBackupNow = new System.Windows.Forms.Button();
             this.btnCleanOldBackups = new System.Windows.Forms.Button();
 
+            // Tab License
+            this.grpLicense = new System.Windows.Forms.GroupBox();
+            this.lblLicenseInfo = new System.Windows.Forms.Label();
+            this.btnLicenseInfo = new System.Windows.Forms.Button();
+            this.btnLicenseActivate = new System.Windows.Forms.Button();
+            this.btnLicenseRemove = new System.Windows.Forms.Button();
+
             // Tab Audio
             this.grpAudioSettings = new System.Windows.Forms.GroupBox();
             this.lblOutputDevice = new System.Windows.Forms.Label();
@@ -144,6 +160,8 @@
             this.tabBackup.SuspendLayout();
             this.grpBackupSettings.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numBackupRetentionDays)).BeginInit();
+            this.tabLicense.SuspendLayout();
+            this.grpLicense.SuspendLayout();
             this.tabAudio.SuspendLayout();
             this.grpAudioSettings.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.trackMiniPlayerVolume)).BeginInit();
@@ -155,6 +173,7 @@
             this.tabMain.Controls.Add(this.tabGeneral);
             this.tabMain.Controls.Add(this.tabPaths);
             this.tabMain.Controls.Add(this.tabBackup);
+            this.tabMain.Controls.Add(this.tabLicense);
             // this.tabMain.Controls.Add(this.tabAudio);     // TAB AUDIO DISATTIVATA
             this.tabMain.Dock = System.Windows.Forms.DockStyle.Top;
             this.tabMain.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
@@ -549,6 +568,80 @@
             this.btnCleanOldBackups.Click += new System.EventHandler(this.btnCleanOldBackups_Click);
 
             // ═══════════════════════════════════════════════════════════
+            // TAB LICENZA
+            // ═══════════════════════════════════════════════════════════
+
+            this.tabLicense.BackColor = System.Drawing.Color.White;
+            this.tabLicense.Controls.Add(this.grpLicense);
+            this.tabLicense.Location = new System.Drawing.Point(4, 28);
+            this.tabLicense.Name = "tabLicense";
+            this.tabLicense.Padding = new System.Windows.Forms.Padding(20);
+            this.tabLicense.Size = new System.Drawing.Size(692, 468);
+            this.tabLicense.TabIndex = 3;
+            this.tabLicense.Text = "🔑 Licenza";
+
+            // grpLicense
+            this.grpLicense.Controls.Add(this.lblLicenseInfo);
+            this.grpLicense.Controls.Add(this.btnLicenseInfo);
+            this.grpLicense.Controls.Add(this.btnLicenseActivate);
+            this.grpLicense.Controls.Add(this.btnLicenseRemove);
+            this.grpLicense.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
+            this.grpLicense.Location = new System.Drawing.Point(20, 20);
+            this.grpLicense.Name = "grpLicense";
+            this.grpLicense.Size = new System.Drawing.Size(650, 250);
+            this.grpLicense.TabIndex = 0;
+            this.grpLicense.TabStop = false;
+            this.grpLicense.Text = "🔑 Gestione Licenza";
+
+            // lblLicenseInfo
+            this.lblLicenseInfo.AutoSize = false;
+            this.lblLicenseInfo.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            this.lblLicenseInfo.Location = new System.Drawing.Point(30, 35);
+            this.lblLicenseInfo.Name = "lblLicenseInfo";
+            this.lblLicenseInfo.Size = new System.Drawing.Size(590, 50);
+            this.lblLicenseInfo.TabIndex = 0;
+            this.lblLicenseInfo.Text = "Gestisci la tua licenza AirADV: visualizza i dettagli, attiva una nuova licenza o rimuovi quella esistente.";
+
+            // btnLicenseInfo
+            this.btnLicenseInfo.BackColor = System.Drawing.Color.FromArgb(0, 120, 212);
+            this.btnLicenseInfo.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnLicenseInfo.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
+            this.btnLicenseInfo.ForeColor = System.Drawing.Color.White;
+            this.btnLicenseInfo.Location = new System.Drawing.Point(30, 100);
+            this.btnLicenseInfo.Name = "btnLicenseInfo";
+            this.btnLicenseInfo.Size = new System.Drawing.Size(250, 40);
+            this.btnLicenseInfo.TabIndex = 1;
+            this.btnLicenseInfo.Text = "ℹ️ Informazioni Licenza";
+            this.btnLicenseInfo.UseVisualStyleBackColor = false;
+            this.btnLicenseInfo.Click += new System.EventHandler(this.btnLicenseInfo_Click);
+
+            // btnLicenseActivate
+            this.btnLicenseActivate.BackColor = System.Drawing.Color.FromArgb(40, 167, 69);
+            this.btnLicenseActivate.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnLicenseActivate.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
+            this.btnLicenseActivate.ForeColor = System.Drawing.Color.White;
+            this.btnLicenseActivate.Location = new System.Drawing.Point(30, 155);
+            this.btnLicenseActivate.Name = "btnLicenseActivate";
+            this.btnLicenseActivate.Size = new System.Drawing.Size(250, 40);
+            this.btnLicenseActivate.TabIndex = 2;
+            this.btnLicenseActivate.Text = "🔑 Attiva Licenza";
+            this.btnLicenseActivate.UseVisualStyleBackColor = false;
+            this.btnLicenseActivate.Click += new System.EventHandler(this.btnLicenseActivate_Click);
+
+            // btnLicenseRemove
+            this.btnLicenseRemove.BackColor = System.Drawing.Color.FromArgb(220, 53, 69);
+            this.btnLicenseRemove.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnLicenseRemove.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
+            this.btnLicenseRemove.ForeColor = System.Drawing.Color.White;
+            this.btnLicenseRemove.Location = new System.Drawing.Point(320, 155);
+            this.btnLicenseRemove.Name = "btnLicenseRemove";
+            this.btnLicenseRemove.Size = new System.Drawing.Size(250, 40);
+            this.btnLicenseRemove.TabIndex = 3;
+            this.btnLicenseRemove.Text = "🗑️ Rimuovi Licenza";
+            this.btnLicenseRemove.UseVisualStyleBackColor = false;
+            this.btnLicenseRemove.Click += new System.EventHandler(this.btnLicenseRemove_Click);
+
+            // ═══════════════════════════════════════════════════════════
             // TAB AUDIO
             // ═══════════════════════════════════════════════════════════
 
@@ -558,7 +651,7 @@
             this.tabAudio.Name = "tabAudio";
             this.tabAudio.Padding = new System.Windows.Forms.Padding(20);
             this.tabAudio.Size = new System.Drawing.Size(692, 468);
-            this.tabAudio.TabIndex = 3;
+            this.tabAudio.TabIndex = 4;
             this.tabAudio.Text = "🔊 Audio";
             this.tabAudio.Visible = false;
 
@@ -694,6 +787,8 @@
             this.grpBackupSettings.ResumeLayout(false);
             this.grpBackupSettings.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numBackupRetentionDays)).EndInit();
+            this.tabLicense.ResumeLayout(false);
+            this.grpLicense.ResumeLayout(false);
             this.tabAudio.ResumeLayout(false);
             this.grpAudioSettings.ResumeLayout(false);
             this.grpAudioSettings.PerformLayout();

@@ -329,6 +329,7 @@ namespace AirADV.Forms
 				btnRefresh.Text = LanguageManager.Get("Common.Refresh", "🔄 Aggiorna");
 				btnSelectAll.Text = LanguageManager.Get("TimeSlots.BtnSelectAll", "☑ Seleziona Tutti");
 				btnDeselectAll.Text = LanguageManager.Get("TimeSlots.BtnDeselectAll", "☐ Deseleziona Tutti");
+				btnApplyToSelected.Text = LanguageManager.Get("TimeSlots.BtnApply", "✓ Applica ai Selezionati");
 
 				// ✅ Colonne DataGridView
 				dgvTimeSlots.Columns["colTime"].HeaderText = LanguageManager.Get("TimeSlots.ColTime", "Orario");
@@ -578,6 +579,77 @@ namespace AirADV.Forms
 			foreach (DataGridViewRow row in dgvTimeSlots.Rows)
 			{
 				row.Cells["colSelect"].Value = false;
+			}
+		}
+
+		private void btnApplyToSelected_Click(object sender, EventArgs e)
+		{
+			try
+			{
+				var selectedSlots = new List<DbcManager.TimeSlot>();
+
+				foreach (DataGridViewRow row in dgvTimeSlots.Rows)
+				{
+					if (Convert.ToBoolean(row.Cells["colSelect"].Value))
+					{
+						var slot = row.Tag as DbcManager.TimeSlot;
+						if (slot != null)
+							selectedSlots.Add(slot);
+					}
+				}
+
+				if (selectedSlots.Count == 0)
+				{
+					MessageBox.Show(
+						LanguageManager.Get("TimeSlots.NoSlotsSelected", "Nessun punto orario selezionato!"),
+						LanguageManager.Get("Common.Warning", "Attenzione"),
+						MessageBoxButtons.OK,
+						MessageBoxIcon.Warning
+					);
+					return;
+				}
+
+				// Applica i valori della configurazione a tutti gli slot selezionati
+				string opening = txtConfigOpening.Text.Trim();
+				string infraSpot = txtConfigInfraSpot.Text.Trim();
+				string closing = txtConfigClosing.Text.Trim();
+				int maxDuration = (int)numConfigMaxDuration.Value;
+				int priority = (int)numConfigPriority.Value;
+
+				foreach (var slot in selectedSlots)
+				{
+					if (!string.IsNullOrEmpty(opening))
+						slot.OpeningFile = opening;
+					if (!string.IsNullOrEmpty(infraSpot))
+						slot.InfraSpotFile = infraSpot;
+					if (!string.IsNullOrEmpty(closing))
+						slot.ClosingFile = closing;
+					slot.MaxDuration = maxDuration;
+					slot.Priority = priority;
+				}
+
+				RefreshGrid();
+				_isDirty = true;
+
+				MessageBox.Show(
+					string.Format(
+						LanguageManager.Get("TimeSlots.ApplySuccess", "✅ Configurazione applicata a {0} punti orari!"),
+						selectedSlots.Count
+					),
+					LanguageManager.Get("Common.Success", "Successo"),
+					MessageBoxButtons.OK,
+					MessageBoxIcon.Information
+				);
+			}
+			catch (Exception ex)
+			{
+				MessageBox.Show(
+					$"{LanguageManager.Get("TimeSlots.ApplyError", "Errore applicazione configurazione")}:
+{ex.Message}",
+					LanguageManager.Get("Common.Error", "Errore"),
+					MessageBoxButtons.OK,
+					MessageBoxIcon.Error
+				);
 			}
 		}
 

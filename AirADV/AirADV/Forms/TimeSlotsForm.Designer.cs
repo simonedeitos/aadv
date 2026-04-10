@@ -43,6 +43,7 @@
         private System.Windows.Forms.Panel panelSelection;
         private System.Windows.Forms.Button btnSelectAll;
         private System.Windows.Forms.Button btnDeselectAll;
+        private System.Windows.Forms.Button btnApplyToSelected;
 
         // RIGHT PANEL - Lista Punti Orari
         private System.Windows.Forms.DataGridView dgvTimeSlots;
@@ -95,6 +96,7 @@
             panelSelection = new Panel();
             btnSelectAll = new Button();
             btnDeselectAll = new Button();
+            btnApplyToSelected = new Button();
             dgvTimeSlots = new DataGridView();
             panelGridButtons = new Panel();
             btnDeleteSlots = new Button();
@@ -432,9 +434,10 @@
             // 
             panelSelection.Controls.Add(btnSelectAll);
             panelSelection.Controls.Add(btnDeselectAll);
+            panelSelection.Controls.Add(btnApplyToSelected);
             panelSelection.Location = new Point(7, 530);
             panelSelection.Name = "panelSelection";
-            panelSelection.Size = new Size(425, 50);
+            panelSelection.Size = new Size(425, 95);
             panelSelection.TabIndex = 2;
             // 
             // btnSelectAll
@@ -458,6 +461,20 @@
             btnDeselectAll.Text = "☐ Deseleziona Tutti";
             btnDeselectAll.UseVisualStyleBackColor = true;
             btnDeselectAll.Click += btnDeselectAll_Click;
+            // 
+            // btnApplyToSelected
+            // 
+            btnApplyToSelected.BackColor = Color.FromArgb(0, 123, 255);
+            btnApplyToSelected.FlatStyle = FlatStyle.Flat;
+            btnApplyToSelected.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+            btnApplyToSelected.ForeColor = Color.White;
+            btnApplyToSelected.Location = new Point(15, 52);
+            btnApplyToSelected.Name = "btnApplyToSelected";
+            btnApplyToSelected.Size = new Size(390, 32);
+            btnApplyToSelected.TabIndex = 2;
+            btnApplyToSelected.Text = "✓ Applica ai Selezionati";
+            btnApplyToSelected.UseVisualStyleBackColor = false;
+            btnApplyToSelected.Click += btnApplyToSelected_Click;
             // 
             // dgvTimeSlots
             // 

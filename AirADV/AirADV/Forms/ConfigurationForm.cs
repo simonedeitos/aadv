@@ -10,6 +10,7 @@ namespace AirADV.Forms
     public partial class ConfigurationForm : Form
     {
         private bool _isDirty = false;
+        private bool _isLoading = false;
 
         public ConfigurationForm()
         {
@@ -21,13 +22,17 @@ namespace AirADV.Forms
         {
             try
             {
+                _isLoading = true;
                 LoadSettings();
                 ApplyLanguage();
+                _isLoading = false;
+                _isDirty = false;
 
                 LanguageManager.LanguageChanged += LanguageManager_LanguageChanged;
             }
             catch (Exception ex)
             {
+                _isLoading = false;
                 MessageBox.Show($"Errore caricamento impostazioni:\n{ex.Message}", "Errore",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
@@ -245,6 +250,14 @@ namespace AirADV.Forms
                 btnBackupNow.Text = LanguageManager.Get("Configuration.BtnBackupNow", "💾 Esegui Backup Ora");
                 btnCleanOldBackups.Text = LanguageManager.Get("Configuration.BtnCleanOldBackups", "🗑️ Pulisci Backup Vecchi");
 
+                // ✅ TAB LICENZA
+                tabLicense.Text = "   " + LanguageManager.Get("Configuration.TabLicense", "🔑 Licenza") + "   ";
+                grpLicense.Text = LanguageManager.Get("Configuration.GrpLicense", "🔑 Gestione Licenza");
+                lblLicenseInfo.Text = LanguageManager.Get("Configuration.LblLicenseInfo", "Gestisci la tua licenza AirADV: visualizza i dettagli, attiva una nuova licenza o rimuovi quella esistente.");
+                btnLicenseInfo.Text = LanguageManager.Get("Configuration.BtnLicenseInfo", "ℹ️ Informazioni Licenza");
+                btnLicenseActivate.Text = LanguageManager.Get("Configuration.BtnLicenseActivate", "🔑 Attiva Licenza");
+                btnLicenseRemove.Text = LanguageManager.Get("Configuration.BtnLicenseRemove", "🗑️ Rimuovi Licenza");
+
                 // ✅ TAB AUDIO
                 grpAudioSettings.Text = LanguageManager.Get("Configuration.GrpAudioSettings", "🔊 Impostazioni Audio");
                 lblOutputDevice.Text = LanguageManager.Get("Configuration.LblOutputDevice", "Dispositivo Output:");
@@ -278,39 +291,39 @@ namespace AirADV.Forms
 
         private void cmbLanguage_SelectedIndexChanged(object sender, EventArgs e)
         {
-            _isDirty = true;
+            if (!_isLoading) _isDirty = true;
         }
 
         private void chkAutoSave_CheckedChanged(object sender, EventArgs e)
         {
-            _isDirty = true;
+            if (!_isLoading) _isDirty = true;
         }
 
         private void rbMode_CheckedChanged(object sender, EventArgs e)
         {
-            _isDirty = true;
+            if (!_isLoading) _isDirty = true;
         }
 
         private void chkAutoBackup_CheckedChanged(object sender, EventArgs e)
         {
-            _isDirty = true;
+            if (!_isLoading) _isDirty = true;
             numBackupRetentionDays.Enabled = chkAutoBackup.Checked;
         }
 
         private void numBackupRetentionDays_ValueChanged(object sender, EventArgs e)
         {
-            _isDirty = true;
+            if (!_isLoading) _isDirty = true;
         }
 
         private void cmbOutputDevice_SelectedIndexChanged(object sender, EventArgs e)
         {
-            _isDirty = true;
+            if (!_isLoading) _isDirty = true;
         }
 
         private void trackMiniPlayerVolume_Scroll(object sender, EventArgs e)
         {
             lblVolumeValue.Text = $"{trackMiniPlayerVolume.Value}%";
-            _isDirty = true;
+            if (!_isLoading) _isDirty = true;
         }
 
         // ═══════════════════════════════════════════════════════════
@@ -588,15 +601,76 @@ namespace AirADV.Forms
         }
 
         // ═══════════════════════════════════════════════════════════
+        // GESTIONE LICENZA
+        // ═══════════════════════════════════════════════════════════
+
+        private void btnLicenseInfo_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                using (var form = new LicenseInfoForm())
+                {
+                    form.ShowDialog(this);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    $"{LanguageManager.Get("Messages.OpenFormError", "Errore apertura form")}:\n{ex.Message}",
+                    LanguageManager.Get("Common.Error", "Errore"),
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error
+                );
+            }
+        }
+
+        private void btnLicenseActivate_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                using (var form = new LicenseForm())
+                {
+                    form.ShowDialog(this);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    $"{LanguageManager.Get("Messages.OpenFormError", "Errore apertura form")}:\n{ex.Message}",
+                    LanguageManager.Get("Common.Error", "Errore"),
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error
+                );
+            }
+        }
+
+        private void btnLicenseRemove_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                using (var form = new LicenseRemoveConfirmForm())
+                {
+                    form.ShowDialog(this);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    $"{LanguageManager.Get("Messages.OpenFormError", "Errore apertura form")}:\n{ex.Message}",
+                    LanguageManager.Get("Common.Error", "Errore"),
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error
+                );
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════════
         // CLASSI HELPER
         // ═══════════════════════════════════════════════════════════
 
-        /// <summary>
-        /// ✅ AGGIORNATO: Usa FileName invece di Code
-        /// </summary>
         private class LanguageItem
         {
-            public string FileName { get; set; }      // Es: "Italian", "English"
+            public string FileName { get; set; }      // Es: "Italiano", "English"
             public string DisplayName { get; set; }   // Es: "Italiano", "English"
             public string Code { get; set; }          // Es: "it-IT", "en-US" (per riferimento)
 

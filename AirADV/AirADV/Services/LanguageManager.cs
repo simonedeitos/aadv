@@ -14,7 +14,7 @@ namespace AirADV.Services.Localization
         private static Dictionary<string, string> _strings = new Dictionary<string, string>();
         private static Dictionary<string, string> _missingKeys = new Dictionary<string, string>();
         private static string _currentCulture = "it-IT";
-        private static string _currentLanguageFileName = "Italian"; // ✅ NUOVO:  nome file corrente
+        private static string _currentLanguageFileName = "Italiano"; // nome file corrente
         private static string _languagesPath = "";
 
         public static event EventHandler LanguageChanged;
@@ -31,62 +31,46 @@ namespace AirADV.Services.Localization
         public static string CurrentLanguageName { get; private set; } = "Italiano";
 
         /// <summary>
-        /// ✅ AGGIORNATO: Inizializza usando nome file (es: "Italian")
+        /// Inizializza usando nome file (es: "Italiano", "English")
+        /// Legge sempre da exe\Resources\Languages
         /// </summary>
-        public static void Initialize(string languageFileName = "Italian")
+        public static void Initialize(string languageFileName = "Italiano")
         {
             try
             {
-                // ✅ PERCORSO 1: Cartella progetto (sviluppo/debug)
-                string projectLanguagesPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resources", "Languages");
+                // Legge SEMPRE da exe\Resources\Languages
+                _languagesPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resources", "Languages");
 
-                // ✅ PERCORSO 2: Cartella sistema (produzione)
-                string systemLanguagesPath = Path.Combine(ConfigManager.BASE_PATH, "Languages");
+                Console.WriteLine($"[LanguageManager] Cartella lingue: {_languagesPath}");
 
-                // ✅ Priorità: usa cartella progetto se esiste, altrimenti sistema
-                if (Directory.Exists(projectLanguagesPath))
+                if (!Directory.Exists(_languagesPath))
                 {
-                    _languagesPath = projectLanguagesPath;
-                    Console.WriteLine($"[LanguageManager] ✅ Usando cartella PROGETTO: {_languagesPath}");
-                }
-                else if (Directory.Exists(systemLanguagesPath))
-                {
-                    _languagesPath = systemLanguagesPath;
-                    Console.WriteLine($"[LanguageManager] ✅ Usando cartella SISTEMA: {_languagesPath}");
-                }
-                else
-                {
-                    // Crea cartella sistema
-                    _languagesPath = systemLanguagesPath;
-                    Directory.CreateDirectory(_languagesPath);
-                    Console.WriteLine($"[LanguageManager] ✅ Cartella sistema creata: {_languagesPath}");
-
-                    // Crea file italiano di default
-                    CreateDefaultItalianFile();
+                    Console.WriteLine($"[LanguageManager] ⚠️ Cartella non trovata: {_languagesPath}");
+                    // Fallback minimo in memoria, non crea file
+                    _strings["Common.OK"] = "OK";
+                    _strings["Common.Cancel"] = "Annulla";
+                    _strings["Common.Error"] = "Errore";
+                    return;
                 }
 
-                // ✅ DEBUG: Mostra file trovati
-                if (Directory.Exists(_languagesPath))
+                // Mostra file trovati
+                var iniFiles = Directory.GetFiles(_languagesPath, "*.ini");
+                Console.WriteLine($"[LanguageManager] File .ini trovati: {iniFiles.Length}");
+                foreach (var file in iniFiles)
                 {
-                    var iniFiles = Directory.GetFiles(_languagesPath, "*.ini");
-                    Console.WriteLine($"[LanguageManager] 📂 File .ini trovati: {iniFiles.Length}");
-                    foreach (var file in iniFiles)
-                    {
-                        Console.WriteLine($"[LanguageManager]   - {Path.GetFileName(file)}");
-                    }
+                    Console.WriteLine($"[LanguageManager]   - {Path.GetFileName(file)}");
                 }
 
-                // ✅ Carica lingua usando nome file
+                // Carica lingua usando nome file
                 LoadLanguageByFileName(languageFileName);
 
-                Console.WriteLine($"[LanguageManager] ✅ Inizializzato - Lingua: {CurrentLanguageName} (file: {_currentLanguageFileName})");
+                Console.WriteLine($"[LanguageManager] Inizializzato - Lingua: {CurrentLanguageName} (file: {_currentLanguageFileName})");
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"[LanguageManager] ❌ Errore inizializzazione: {ex.Message}");
-                Console.WriteLine($"[LanguageManager] StackTrace: {ex.StackTrace}");
 
-                // Fallback:  crea dizionario minimo per evitare crash
+                // Fallback: dizionario minimo per evitare crash
                 _strings["Common.OK"] = "OK";
                 _strings["Common.Cancel"] = "Annulla";
                 _strings["Common.Error"] = "Errore";
@@ -94,7 +78,7 @@ namespace AirADV.Services.Localization
         }
 
         /// <summary>
-        /// ✅ NUOVO: Carica lingua usando nome file (es: "Italian", "English")
+        /// Carica lingua usando nome file (es: "Italiano", "English", "Deutsch")
         /// </summary>
         public static void LoadLanguageByFileName(string fileName)
         {
@@ -103,6 +87,12 @@ namespace AirADV.Services.Localization
                 _strings.Clear();
                 _missingKeys.Clear();
 
+                // Assicurati che il percorso sia inizializzato
+                if (string.IsNullOrEmpty(_languagesPath))
+                {
+                    _languagesPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resources", "Languages");
+                }
+
                 // Costruisci percorso completo
                 string filePath = Path.Combine(_languagesPath, $"{fileName}.ini");
 
@@ -110,17 +100,24 @@ namespace AirADV.Services.Localization
                 {
                     Console.WriteLine($"[LanguageManager] ⚠️ File non trovato: {fileName}.ini");
 
-                    // Fallback a Italian
-                    filePath = Path.Combine(_languagesPath, "Italian.ini");
-
-                    if (!File.Exists(filePath))
+                    // Fallback a Italiano
+                    string itPath = Path.Combine(_languagesPath, "Italiano.ini");
+                    if (File.Exists(itPath))
                     {
-                        Console.WriteLine($"[LanguageManager] ⚠️ Italian.ini non trovato, lo creo");
-                        CreateDefaultItalianFile();
-                        filePath = Path.Combine(_languagesPath, "Italian.ini");
+                        filePath = itPath;
+                        fileName = "Italiano";
+                        Console.WriteLine($"[LanguageManager] Fallback a Italiano.ini");
                     }
-
-                    fileName = "Italian";
+                    else
+                    {
+                        Console.WriteLine($"[LanguageManager] ⚠️ Nessun file lingua trovato, uso fallback in memoria");
+                        _currentLanguageFileName = fileName;
+                        CurrentLanguageName = fileName;
+                        _strings["Common.OK"] = "OK";
+                        _strings["Common.Cancel"] = "Annulla";
+                        _strings["Common.Error"] = "Errore";
+                        return;
+                    }
                 }
 
                 // Carica file INI
@@ -134,7 +131,7 @@ namespace AirADV.Services.Localization
                 // Notifica cambio lingua
                 LanguageChanged?.Invoke(null, EventArgs.Empty);
 
-                Console.WriteLine($"[LanguageManager] ✅ Lingua caricata: {CurrentLanguageName}");
+                Console.WriteLine($"[LanguageManager] Lingua caricata: {CurrentLanguageName}");
                 Console.WriteLine($"[LanguageManager]   File: {fileName}.ini");
                 Console.WriteLine($"[LanguageManager]   Code: {_currentCulture}");
                 Console.WriteLine($"[LanguageManager]   Chiavi: {_strings.Count}");
@@ -146,7 +143,7 @@ namespace AirADV.Services.Localization
         }
 
         /// <summary>
-        /// ⚠️ DEPRECATO: Usa LoadLanguageByFileName invece
+        /// Deprecato: Usa LoadLanguageByFileName invece
         /// </summary>
         [Obsolete("Usa LoadLanguageByFileName invece")]
         public static void LoadLanguage(string culture)
@@ -154,13 +151,13 @@ namespace AirADV.Services.Localization
             // Converti codice cultura in nome file
             string fileName = culture switch
             {
-                "it-IT" => "Italian",
+                "it-IT" => "Italiano",
                 "en-US" => "English",
                 "en-GB" => "English",
-                "es-ES" => "Spanish",
-                "fr-FR" => "French",
-                "de-DE" => "German",
-                _ => "Italian"
+                "es-ES" => "Español",
+                "fr-FR" => "Français",
+                "de-DE" => "Deutsch",
+                _ => "Italiano"
             };
 
             LoadLanguageByFileName(fileName);
@@ -304,9 +301,9 @@ namespace AirADV.Services.Localization
         }
 
         /// <summary>
-        /// ⚠️ DEPRECATO:  Usa LoadLanguageByFileName invece
+        /// Deprecato: Usa SetLanguage invece
         /// </summary>
-        [Obsolete("Usa LoadLanguageByFileName invece")]
+        [Obsolete("Usa SetLanguage invece")]
         public static void ChangeLanguage(string culture)
         {
             LoadLanguage(culture);
@@ -323,22 +320,19 @@ namespace AirADV.Services.Localization
 
             try
             {
-                // ✅ Usa _languagesPath già inizializzato
                 if (string.IsNullOrEmpty(_languagesPath))
                 {
-                    Console.WriteLine("[LanguageManager] ⚠️ _languagesPath non inizializzato, chiamo Initialize");
-                    Initialize();
+                    _languagesPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resources", "Languages");
                 }
 
                 if (!Directory.Exists(_languagesPath))
                 {
                     Console.WriteLine($"[LanguageManager] ⚠️ Cartella non esiste: {_languagesPath}");
-                    Directory.CreateDirectory(_languagesPath);
-                    CreateDefaultItalianFile();
+                    return languages;
                 }
 
                 var files = Directory.GetFiles(_languagesPath, "*.ini");
-                Console.WriteLine($"[LanguageManager] 📂 GetAvailableLanguages - Trovati {files.Length} file .ini");
+                Console.WriteLine($"[LanguageManager] GetAvailableLanguages - Trovati {files.Length} file .ini");
 
                 foreach (var file in files)
                 {
@@ -348,7 +342,7 @@ namespace AirADV.Services.Localization
                         if (info != null)
                         {
                             languages.Add(info);
-                            Console.WriteLine($"[LanguageManager]   ✅ Lingua:  {info.Name} (file: {Path.GetFileNameWithoutExtension(file)})");
+                            Console.WriteLine($"[LanguageManager]   Lingua: {info.Name} (file: {Path.GetFileNameWithoutExtension(file)})");
                         }
                         else
                         {
@@ -359,22 +353,6 @@ namespace AirADV.Services.Localization
                     {
                         Console.WriteLine($"[LanguageManager]   ❌ Errore lettura {Path.GetFileName(file)}: {ex.Message}");
                     }
-                }
-
-                // Se nessun file trovato, crea italiano di default
-                if (languages.Count == 0)
-                {
-                    Console.WriteLine("[LanguageManager] ⚠️ Nessuna lingua trovata, creo Italian.ini");
-                    CreateDefaultItalianFile();
-
-                    languages.Add(new LanguageInfo
-                    {
-                        Code = "it-IT",
-                        Name = "Italiano",
-                        Author = "AirADV Team",
-                        Version = "1.0.0",
-                        FilePath = Path.Combine(_languagesPath, "Italian.ini")
-                    });
                 }
             }
             catch (Exception ex)
@@ -421,73 +399,6 @@ namespace AirADV.Services.Localization
             catch
             {
                 return null;
-            }
-        }
-
-        /// <summary>
-        /// Crea file Italian.ini di default
-        /// </summary>
-        private static void CreateDefaultItalianFile()
-        {
-            try
-            {
-                string filePath = Path.Combine(_languagesPath, "Italian.ini");
-
-                if (File.Exists(filePath))
-                    return;
-
-                var content = new StringBuilder();
-                content.AppendLine("[Language]");
-                content.AppendLine("Name=Italiano");
-                content.AppendLine("Code=it-IT");
-                content.AppendLine("Author=AirADV Team");
-                content.AppendLine("Version=1.0.0");
-                content.AppendLine();
-                content.AppendLine("[Common]");
-                content.AppendLine("Save=💾 Salva");
-                content.AppendLine("Cancel=✖ Annulla");
-                content.AppendLine("Apply=✓ Applica");
-                content.AppendLine("Close=Chiudi");
-                content.AppendLine("OK=OK");
-                content.AppendLine("Yes=Sì");
-                content.AppendLine("No=No");
-                content.AppendLine("Add=➕ Aggiungi");
-                content.AppendLine("Delete=🗑️ Elimina");
-                content.AppendLine("Edit=✏️ Modifica");
-                content.AppendLine("Refresh=🔄 Aggiorna");
-                content.AppendLine("Active=Attivo");
-                content.AppendLine();
-                content.AppendLine("[Configuration]");
-                content.AppendLine("WindowTitle=⚙️ Configurazione");
-                content.AppendLine("TabGeneral=🌐 Generale");
-                content.AppendLine("TabPaths=📁 Percorsi");
-                content.AppendLine("TabBackup=💾 Backup");
-                content.AppendLine();
-                content.AppendLine("[MainForm]");
-                content.AppendLine("WindowTitle=AirADV - Gestionale Pubblicitario");
-                content.AppendLine("Title=Gestionale Pubblicitario v1.0.0");
-                content.AppendLine("BtnClients=👥 Clienti");
-                content.AppendLine("BtnTimeSlots=🕐 Punti Orari");
-                content.AppendLine("BtnCategories=🏷️ Categorie");
-                content.AppendLine("BtnSchedule=📅 Palinsesto");
-                content.AppendLine("BtnReports=📊 Report");
-                content.AppendLine("BtnSettings=⚙️ Impostazioni");
-                content.AppendLine("BtnChangeStation=🔄 Cambia Emittente");
-                content.AppendLine("BtnExit=✖ Esci");
-                content.AppendLine();
-                content.AppendLine("[Messages]");
-                content.AppendLine("ConfirmDelete=Sei sicuro di voler eliminare questo elemento?");
-                content.AppendLine("SaveSuccess=Salvataggio completato con successo!");
-                content.AppendLine("SaveError=Errore durante il salvataggio.");
-                content.AppendLine("NoSelection=Nessun elemento selezionato.");
-
-                File.WriteAllText(filePath, content.ToString(), Encoding.UTF8);
-
-                Console.WriteLine($"[LanguageManager] ✅ File Italian.ini creato: {filePath}");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[LanguageManager] Errore creazione Italian.ini: {ex.Message}");
             }
         }
 
