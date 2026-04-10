@@ -419,6 +419,20 @@ namespace AirADV.Forms
             });
 
             dgvCampaigns.CellContentClick += DgvCampaigns_CellContentClick;
+
+            // ✅ Context menu tasto destro su campagna
+            var ctxCampaigns = new ContextMenuStrip();
+            var mnuEdit = new ToolStripMenuItem(LanguageManager.Get("ClientManagement.EditCampaign", "✏️ Modifica Campagna"));
+            var mnuDuplicate = new ToolStripMenuItem(LanguageManager.Get("ClientManagement.DuplicateCampaign", "📋 Duplica Campagna"));
+            var mnuDelete = new ToolStripMenuItem(LanguageManager.Get("ClientManagement.DeleteCampaign", "🗑️ Elimina Campagna"));
+            var mnuPDF = new ToolStripMenuItem(LanguageManager.Get("ClientManagement.ViewPDF", "📄 Visualizza PDF"));
+            mnuEdit.Click += (s, e) => btnEditCampaign_Click(s, e);
+            mnuDuplicate.Click += MnuDuplicateCampaign_Click;
+            mnuDelete.Click += (s, e) => btnDeleteCampaign_Click(s, e);
+            mnuPDF.Click += MnuViewPDF_Click;
+            ctxCampaigns.Items.AddRange(new ToolStripItem[] { mnuEdit, mnuDuplicate, new ToolStripSeparator(), mnuPDF, new ToolStripSeparator(), mnuDelete });
+            ctxCampaigns.Opening += (s, e) => e.Cancel = dgvCampaigns.SelectedRows.Count == 0;
+            dgvCampaigns.ContextMenuStrip = ctxCampaigns;
         }
 
         private void DgvCampaigns_CellContentClick(object sender, DataGridViewCellEventArgs e)
@@ -1261,12 +1275,104 @@ namespace AirADV.Forms
             }
         }
 
+        private void MnuViewPDF_Click(object sender, EventArgs e)
+        {
+            if (dgvCampaigns.SelectedRows.Count == 0) return;
+
+            var campaign = dgvCampaigns.SelectedRows[0].Tag as DbcManager.Campaign;
+            if (campaign == null) return;
+
+            // Simula click sul pulsante PDF della riga selezionata
+            int rowIndex = dgvCampaigns.SelectedRows[0].Index;
+            DgvCampaigns_CellContentClick(sender,
+                new DataGridViewCellEventArgs(dgvCampaigns.Columns["colPDF"].Index, rowIndex));
+        }
+
+        private void MnuDuplicateCampaign_Click(object sender, EventArgs e)
+        {
+            if (dgvCampaigns.SelectedRows.Count == 0) return;
+
+            var source = dgvCampaigns.SelectedRows[0].Tag as DbcManager.Campaign;
+            if (source == null) return;
+
+            try
+            {
+                // ✅ Crea nuova campagna con stessi dati della sorgente
+                var duplicate = new DbcManager.Campaign
+                {
+                    ID = 0, // Sarà assegnato al salvataggio
+                    StationID = source.StationID,
+                    ClientID = source.ClientID,
+                    SpotID = source.SpotID,
+                    CategoryID = source.CategoryID,
+                    CampaignCode = "", // Sarà generato dal wizard
+                    CampaignName = source.CampaignName + " " + LanguageManager.Get("ClientManagement.DuplicateSuffix", "(Copia)"),
+                    // ✅ Date azzerate: inizia oggi, finisce tra 1 mese
+                    StartDate = DateTime.Today,
+                    EndDate = DateTime.Today.AddMonths(1),
+                    DailyPasses = source.DailyPasses,
+                    TimeFrom = source.TimeFrom,
+                    TimeTo = source.TimeTo,
+                    Monday = source.Monday,
+                    Tuesday = source.Tuesday,
+                    Wednesday = source.Wednesday,
+                    Thursday = source.Thursday,
+                    Friday = source.Friday,
+                    Saturday = source.Saturday,
+                    Sunday = source.Sunday,
+                    DistributionMode = source.DistributionMode,
+                    ManualSlots = source.ManualSlots,
+                    IsActive = true,
+                    CreatedDate = DateTime.Now
+                };
+
+                MessageBox.Show(
+                    LanguageManager.Get("ClientManagement.DuplicateSuccess", "✅ Campagna duplicata! Modifica i dati e salva."),
+                    LanguageManager.Get("Common.Information", "Info"),
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information
+                );
+
+                // ✅ Apri il wizard con la campagna duplicata per permettere la modifica
+                var form = new CampaignWizardForm(_stationID, duplicate, isDuplicate: true);
+                if (form.ShowDialog() == DialogResult.OK)
+                {
+                    LoadClientCampaigns(_selectedClient.ID);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    $"{LanguageManager.Get("ClientManagement.DuplicateError", "Errore duplicazione campagna")}:\n{ex.Message}",
+                    LanguageManager.Get("Common.Error", "Errore"),
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error
+                );
+            }
+        }
+
         private void btnDeleteCampaign_Click(object sender, EventArgs e)
         {
             if (dgvCampaigns.SelectedRows.Count == 0) return;
 
             var campaign = dgvCampaigns.SelectedRows[0].Tag as DbcManager.Campaign;
             if (campaign == null) return;
+
+            // ✅ FIX: Blocca eliminazione campagne terminate
+            if (campaign.EndDate.Date < DateTime.Today)
+            {
+                MessageBox.Show(
+                    string.Format(
+                        LanguageManager.Get("ClientManagement.CannotDeleteFinishedCampaign",
+                            "Impossibile eliminare una campagna già terminata!\n\nLa data di fine ({0}) è già passata."),
+                        campaign.EndDate.ToString("dd/MM/yyyy")
+                    ),
+                    LanguageManager.Get("Common.Warning", "Attenzione"),
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning
+                );
+                return;
+            }
 
             var result = MessageBox.Show(
                 string.Format(
@@ -1280,9 +1386,37 @@ namespace AirADV.Forms
 
             if (result == DialogResult.Yes)
             {
+                // ✅ FIX: Rimuovi campagna
                 var allCampaigns = DbcManager.Load<DbcManager.Campaign>("ADV_Campaigns.dbc");
                 allCampaigns.RemoveAll(c => c.ID == campaign.ID);
                 DbcManager.Save("ADV_Campaigns.dbc", allCampaigns);
+
+                // ✅ FIX: Rimuovi anche tutti i record di schedulazione correlati
+                var allSchedules = DbcManager.Load<DbcManager.Schedule>("ADV_Schedule.dbc");
+                allSchedules.RemoveAll(s => s.CampaignID == campaign.ID);
+                DbcManager.Save("ADV_Schedule.dbc", allSchedules);
+
+                // ✅ FIX: Rigenera export AirDirector per rimuovere i record correlati
+                try
+                {
+                    AirDirectorExportService.ExportFullSchedule(
+                        _stationID,
+                        DateTime.Today,
+                        DateTime.Today.AddMonths(3)
+                    );
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[ClientManagement] ⚠️ Errore riesportazione AirDirector: {ex.Message}");
+                }
+
+                MessageBox.Show(
+                    LanguageManager.Get("ClientManagement.CampaignDeletedWithSchedule", "✅ Campagna e schedulazione eliminate!"),
+                    LanguageManager.Get("Common.Success", "Successo"),
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information
+                );
+
                 LoadClientCampaigns(_selectedClient.ID);
             }
         }

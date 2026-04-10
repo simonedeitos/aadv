@@ -25,6 +25,8 @@ namespace AirADV.Forms
 
         private bool _isLoadingData = false;
 
+        private bool _isDuplicate = false;
+
         private DataGridView dgvSchedule;
         private List<string> _availableTimeSlots;
 
@@ -94,6 +96,12 @@ namespace AirADV.Forms
                 LanguageManager.Get("CampaignWizard.EditTitle", "✏️ Modifica Campagna - {0}"),
                 existingCampaign.CampaignName
             );
+        }
+
+        public CampaignWizardForm(int stationID, DbcManager.Campaign duplicateCampaign, bool isDuplicate)
+            : this(stationID, duplicateCampaign)
+        {
+            _isDuplicate = isDuplicate;
         }
 
         private void InitializeAdvancedOptions()
@@ -245,7 +253,7 @@ namespace AirADV.Forms
                 DisableStep3();
                 AddGenerateButton();
 
-                if (_campaign.ID > 0)
+                if (_campaign.ID > 0 || _isDuplicate)
                 {
                     LoadExistingCampaignData();
                 }
@@ -420,8 +428,9 @@ namespace AirADV.Forms
 
                 if (_campaign.ID == 0)
                 {
+                    // ✅ Contatore persistente: non riparte mai da capo
                     var campaigns = DbcManager.Load<DbcManager.Campaign>("ADV_Campaigns.dbc");
-                    int maxNumber = 0;
+                    int maxFromCampaigns = 0;
 
                     foreach (var c in campaigns)
                     {
@@ -430,13 +439,18 @@ namespace AirADV.Forms
                             string numberPart = c.CampaignCode.Substring(5);
                             if (int.TryParse(numberPart, out int number))
                             {
-                                if (number > maxNumber)
-                                    maxNumber = number;
+                                if (number > maxFromCampaigns)
+                                    maxFromCampaigns = number;
                             }
                         }
                     }
 
-                    _campaign.CampaignCode = $"CAMP-{(maxNumber + 1):D3}";
+                    // Usa il massimo tra il contatore persistente e quello ricavato dalle campagne esistenti
+                    int nextNumber = Math.Max(ConfigManager.LastCampaignNumber, maxFromCampaigns) + 1;
+                    ConfigManager.LastCampaignNumber = nextNumber;
+                    ConfigManager.Save();
+
+                    _campaign.CampaignCode = $"CAMP-{nextNumber:D3}";
                 }
 
                 Console.WriteLine($"[CampaignWizard] Step1 salvato - Cliente: {_campaign.ClientID}, Spot: {_campaign.SpotID}, Categoria: {_campaign.CategoryID}");
@@ -811,7 +825,18 @@ namespace AirADV.Forms
                     Console.WriteLine($"[CampaignWizard] ✅ Ripristinati {savedSlots.Length} slot manuali");
                 }
 
-                LoadExistingSchedule();
+                // ✅ Per campagne duplicate (ID=0) non caricare la schedulazione
+                if (!_isDuplicate)
+                {
+                    LoadExistingSchedule();
+                }
+                else
+                {
+                    // Per una campagna duplicata, la schedulazione deve essere rigenerata dall'utente
+                    _scheduleGenerated = false;
+                    DisableStep3();
+                    Console.WriteLine($"[CampaignWizard] ℹ️ Campagna duplicata: schedulazione azzerata, deve essere rigenerata.");
+                }
 
                 Console.WriteLine($"[CampaignWizard] ✅ Caricata campagna esistente: {_campaign.CampaignName}");
             }
