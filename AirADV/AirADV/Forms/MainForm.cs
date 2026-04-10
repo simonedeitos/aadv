@@ -11,6 +11,7 @@ namespace AirADV.Forms
     public partial class MainForm : Form
     {
         private int _currentStationID = 0;
+        private Image _settingsOriginalImage = null;
 
         // ═══════════════════════════════════════════════════════════
         // ✅ Posizioni bottoni per layout dinamico
@@ -33,6 +34,9 @@ namespace AirADV.Forms
         {
             try
             {
+                // Salva l'immagine originale del bottone Settings
+                _settingsOriginalImage = btnSettings.BackgroundImage;
+
                 // Seleziona emittente
                 if (!SelectStation())
                 {
@@ -88,26 +92,30 @@ namespace AirADV.Forms
                     btnLannerTV.Location = new Point(SETTINGS_X, LANNER_Y);
                     btnLannerTV.Size = new Size(140, LANNER_HEIGHT);
 
-                    // ✅ Abbassa e rimpicciolisci Settings
+                    // ✅ Abbassa e rimpicciolisci Settings - SENZA immagine
                     btnSettings.Location = new Point(SETTINGS_X, SETTINGS_SHIFTED_Y);
                     btnSettings.Size = new Size(140, SETTINGS_SHIFTED_HEIGHT);
-                    btnSettings.Padding = new Padding(0, 5, 0, 5);
+                    btnSettings.BackgroundImage = null;  // ✅ Rimuovi immagine (si sformerebbe)
+                    btnSettings.TextAlign = ContentAlignment.MiddleCenter;  // ✅ Centra il testo come Lanner
+                    btnSettings.Padding = new Padding(0);
                     btnSettings.Text = LanguageManager.Get("MainForm.BtnSettings", "⚙️ Impostazioni");
 
-                    Console.WriteLine("[MainForm] 📺 Modalità Radio-TV: Lanner TV visibile");
+                    Console.WriteLine("[MainForm] 📺 Modalità Radio-TV: Lanner TV visibile, Settings senza immagine");
                 }
                 else
                 {
                     // ✅ Nascondi Lanner TV
                     btnLannerTV.Visible = false;
 
-                    // ✅ Settings torna alla posizione/dimensione normale
+                    // ✅ Settings torna alla posizione/dimensione normale CON immagine
                     btnSettings.Location = new Point(SETTINGS_X, SETTINGS_NORMAL_Y);
                     btnSettings.Size = new Size(140, SETTINGS_NORMAL_HEIGHT);
+                    btnSettings.BackgroundImage = _settingsOriginalImage;  // ✅ Ripristina immagine
+                    btnSettings.TextAlign = ContentAlignment.BottomCenter;  // ✅ Testo in basso
                     btnSettings.Padding = new Padding(0, 20, 0, 10);
-                    btnSettings.Text = LanguageManager.Get("MainForm.BtnSettings", "⚙️ Impostazioni");
+                    btnSettings.Text = "\n" + LanguageManager.Get("MainForm.BtnSettings", "Impostazioni");
 
-                    Console.WriteLine("[MainForm] 📻 Modalità Radio: Lanner TV nascosto");
+                    Console.WriteLine("[MainForm] 📻 Modalità Radio: Settings con immagine ripristinata");
                 }
             }
             catch (Exception ex)
