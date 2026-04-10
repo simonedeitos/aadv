@@ -419,25 +419,6 @@ namespace AirADV.Forms
             });
 
             dgvCampaigns.CellContentClick += DgvCampaigns_CellContentClick;
-
-            // Right-click context menu for campaigns
-            var campaignContextMenu = new ContextMenuStrip();
-            var duplicateMenuItem = new ToolStripMenuItem(
-                LanguageManager.Get("ClientManagement.DuplicateCampaign", "📋 Duplica Campagna")
-            );
-            duplicateMenuItem.Click += DuplicateCampaign_Click;
-            campaignContextMenu.Items.Add(duplicateMenuItem);
-            dgvCampaigns.ContextMenuStrip = campaignContextMenu;
-
-            // Select row on right-click before showing context menu
-            dgvCampaigns.CellMouseClick += (s, ev) =>
-            {
-                if (ev.Button == MouseButtons.Right && ev.RowIndex >= 0)
-                {
-                    dgvCampaigns.ClearSelection();
-                    dgvCampaigns.Rows[ev.RowIndex].Selected = true;
-                }
-            };
         }
 
         private void DgvCampaigns_CellContentClick(object sender, DataGridViewCellEventArgs e)
@@ -1287,23 +1268,6 @@ namespace AirADV.Forms
             var campaign = dgvCampaigns.SelectedRows[0].Tag as DbcManager.Campaign;
             if (campaign == null) return;
 
-            // Block deletion of finished campaigns
-            if (campaign.EndDate.Date < DateTime.Today)
-            {
-                MessageBox.Show(
-                    string.Format(
-                        LanguageManager.Get("ClientManagement.CannotDeleteFinishedCampaign",
-                            "Non è possibile eliminare una campagna già terminata!\n\nLa campagna '{0}' è terminata il {1}."),
-                        campaign.CampaignName,
-                        campaign.EndDate.ToString("dd/MM/yyyy")
-                    ),
-                    LanguageManager.Get("Common.Warning", "Attenzione"),
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Warning
-                );
-                return;
-            }
-
             var result = MessageBox.Show(
                 string.Format(
                     LanguageManager.Get("ClientManagement.ConfirmDeleteCampaign", "Eliminare la campagna '{0}'?"),
@@ -1316,17 +1280,9 @@ namespace AirADV.Forms
 
             if (result == DialogResult.Yes)
             {
-                // Remove all schedule records for this campaign
-                var allSchedules = DbcManager.Load<DbcManager.Schedule>("ADV_Schedule.dbc");
-                int removedSchedules = allSchedules.RemoveAll(s => s.CampaignID == campaign.ID);
-                DbcManager.Save("ADV_Schedule.dbc", allSchedules);
-                Console.WriteLine($"[ClientManagement] Rimossi {removedSchedules} record schedulazione per campagna {campaign.ID}");
-
-                // Remove the campaign record
                 var allCampaigns = DbcManager.Load<DbcManager.Campaign>("ADV_Campaigns.dbc");
                 allCampaigns.RemoveAll(c => c.ID == campaign.ID);
                 DbcManager.Save("ADV_Campaigns.dbc", allCampaigns);
-
                 LoadClientCampaigns(_selectedClient.ID);
             }
         }
@@ -1334,50 +1290,6 @@ namespace AirADV.Forms
         // ═══════════════════════════════════════════════════════════
         // HELPERS
         // ═══════════════════════════════════════════════════════════
-
-        private void DuplicateCampaign_Click(object sender, EventArgs e)
-        {
-            if (dgvCampaigns.SelectedRows.Count == 0) return;
-
-            var originalCampaign = dgvCampaigns.SelectedRows[0].Tag as DbcManager.Campaign;
-            if (originalCampaign == null) return;
-
-            var duplicatedCampaign = new DbcManager.Campaign
-            {
-                ID = 0,
-                StationID = originalCampaign.StationID,
-                ClientID = originalCampaign.ClientID,
-                SpotID = originalCampaign.SpotID,
-                CategoryID = originalCampaign.CategoryID,
-                CampaignCode = "",
-                CampaignName = string.Format(
-                    LanguageManager.Get("ClientManagement.DuplicateCampaignName", "Copia di {0}"),
-                    originalCampaign.CampaignName
-                ),
-                StartDate = DateTime.Today,
-                EndDate = DateTime.Today.AddMonths(1),
-                DailyPasses = originalCampaign.DailyPasses,
-                TimeFrom = originalCampaign.TimeFrom,
-                TimeTo = originalCampaign.TimeTo,
-                Monday = originalCampaign.Monday,
-                Tuesday = originalCampaign.Tuesday,
-                Wednesday = originalCampaign.Wednesday,
-                Thursday = originalCampaign.Thursday,
-                Friday = originalCampaign.Friday,
-                Saturday = originalCampaign.Saturday,
-                Sunday = originalCampaign.Sunday,
-                DistributionMode = originalCampaign.DistributionMode,
-                ManualSlots = originalCampaign.ManualSlots,
-                IsActive = true,
-                CreatedDate = DateTime.Now
-            };
-
-            var form = new CampaignWizardForm(_stationID, duplicatedCampaign);
-            if (form.ShowDialog() == DialogResult.OK)
-            {
-                LoadClientCampaigns(_selectedClient.ID);
-            }
-        }
 
         private string FormatDuration(int seconds)
         {
