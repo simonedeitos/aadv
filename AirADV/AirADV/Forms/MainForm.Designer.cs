@@ -80,7 +80,7 @@
             // 
             picStationLogo.BackColor = Color.Transparent;
             picStationLogo.BorderStyle = BorderStyle.FixedSingle;
-            picStationLogo.Location = new Point(20, 10);
+            picStationLogo.Location = new Point(66, 10);
             picStationLogo.Name = "picStationLogo";
             picStationLogo.Size = new Size(127, 70);
             picStationLogo.SizeMode = PictureBoxSizeMode.Zoom;
@@ -108,7 +108,7 @@
             lblStationName.AutoSize = true;
             lblStationName.Font = new Font("Segoe UI", 18F, FontStyle.Bold);
             lblStationName.ForeColor = Color.White;
-            lblStationName.Location = new Point(160, 30);
+            lblStationName.Location = new Point(209, 19);
             lblStationName.Name = "lblStationName";
             lblStationName.Size = new Size(200, 32);
             lblStationName.TabIndex = 1;
@@ -119,7 +119,7 @@
             lblTitle.AutoSize = true;
             lblTitle.Font = new Font("Segoe UI", 10F);
             lblTitle.ForeColor = Color.LightGray;
-            lblTitle.Location = new Point(162, 62);
+            lblTitle.Location = new Point(211, 51);
             lblTitle.Name = "lblTitle";
             lblTitle.Size = new Size(193, 19);
             lblTitle.TabIndex = 2;
