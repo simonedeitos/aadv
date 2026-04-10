@@ -745,7 +745,10 @@ namespace AirADV.Forms
                 LoadExistingSpots();
                 UpdateSpotList();
 
-                numDailyPasses.Value = _campaign.DailyPasses;
+                if (_campaign.DailyPasses >= (int)numDailyPasses.Minimum)
+                    numDailyPasses.Value = _campaign.DailyPasses;
+                else
+                    numDailyPasses.Value = numDailyPasses.Minimum;
 
                 if (_campaign.DistributionMode == "BALANCED")
                     rdAutoBalanced.Checked = true;
