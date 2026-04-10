@@ -39,6 +39,7 @@
 
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             panelTop = new Panel();
             picStationLogo = new PictureBox();
             btnExit = new Button();
@@ -159,6 +160,8 @@
             // btnClients
             // 
             btnClients.BackColor = Color.White;
+            btnClients.BackgroundImage = (Image)resources.GetObject("btnClients.BackgroundImage");
+            btnClients.BackgroundImageLayout = ImageLayout.Stretch;
             btnClients.Cursor = Cursors.Hand;
             btnClients.FlatAppearance.BorderColor = Color.FromArgb(220, 220, 220);
             btnClients.FlatAppearance.MouseOverBackColor = Color.FromArgb(230, 245, 255);
@@ -178,6 +181,8 @@
             // btnTimeSlots
             // 
             btnTimeSlots.BackColor = Color.White;
+            btnTimeSlots.BackgroundImage = (Image)resources.GetObject("btnTimeSlots.BackgroundImage");
+            btnTimeSlots.BackgroundImageLayout = ImageLayout.Stretch;
             btnTimeSlots.Cursor = Cursors.Hand;
             btnTimeSlots.FlatAppearance.BorderColor = Color.FromArgb(220, 220, 220);
             btnTimeSlots.FlatAppearance.MouseOverBackColor = Color.FromArgb(230, 245, 255);
@@ -197,6 +202,8 @@
             // btnCategories
             // 
             btnCategories.BackColor = Color.White;
+            btnCategories.BackgroundImage = (Image)resources.GetObject("btnCategories.BackgroundImage");
+            btnCategories.BackgroundImageLayout = ImageLayout.Stretch;
             btnCategories.Cursor = Cursors.Hand;
             btnCategories.FlatAppearance.BorderColor = Color.FromArgb(220, 220, 220);
             btnCategories.FlatAppearance.MouseOverBackColor = Color.FromArgb(230, 245, 255);
@@ -216,6 +223,8 @@
             // btnSchedule
             // 
             btnSchedule.BackColor = Color.White;
+            btnSchedule.BackgroundImage = (Image)resources.GetObject("btnSchedule.BackgroundImage");
+            btnSchedule.BackgroundImageLayout = ImageLayout.Stretch;
             btnSchedule.Cursor = Cursors.Hand;
             btnSchedule.FlatAppearance.BorderColor = Color.FromArgb(220, 220, 220);
             btnSchedule.FlatAppearance.MouseOverBackColor = Color.FromArgb(230, 245, 255);
@@ -253,6 +262,8 @@
             // btnSettings
             // 
             btnSettings.BackColor = Color.White;
+            btnSettings.BackgroundImage = (Image)resources.GetObject("btnSettings.BackgroundImage");
+            btnSettings.BackgroundImageLayout = ImageLayout.Stretch;
             btnSettings.Cursor = Cursors.Hand;
             btnSettings.FlatAppearance.BorderColor = Color.FromArgb(220, 220, 220);
             btnSettings.FlatAppearance.MouseOverBackColor = Color.FromArgb(230, 245, 255);
