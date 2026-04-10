@@ -411,9 +411,11 @@
             pnlStep2.Controls.Add(lblStep2Title);
             pnlStep2.Controls.Add(grpDistribution);
             pnlStep2.Controls.Add(grpAutoConfig);
+            pnlStep2.Controls.Add(grpManualSlots);
+            pnlStep2.Controls.Add(grpDays);
             pnlStep2.Location = new Point(20, 378);
             pnlStep2.Name = "pnlStep2";
-            pnlStep2.Size = new Size(1070, 337);
+            pnlStep2.Size = new Size(1070, 310);
             pnlStep2.TabIndex = 1;
             // 
             // lblStep2Title
@@ -480,17 +482,16 @@
             // grpAutoConfig
             // 
             grpAutoConfig.Controls.Add(lblDailyPasses);
+            grpAutoConfig.Controls.Add(numDailyPasses);
             grpAutoConfig.Controls.Add(chkTimeFilter);
             grpAutoConfig.Controls.Add(lblTimeFrom);
             grpAutoConfig.Controls.Add(dtpTimeFrom);
             grpAutoConfig.Controls.Add(lblTimeTo);
             grpAutoConfig.Controls.Add(dtpTimeTo);
-            grpAutoConfig.Controls.Add(grpDays);
-            grpAutoConfig.Controls.Add(grpManualSlots);
             grpAutoConfig.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
             grpAutoConfig.Location = new Point(49, 139);
             grpAutoConfig.Name = "grpAutoConfig";
-            grpAutoConfig.Size = new Size(990, 178);
+            grpAutoConfig.Size = new Size(990, 110);
             grpAutoConfig.TabIndex = 2;
             grpAutoConfig.TabStop = false;
             grpAutoConfig.Text = "Configurazione Automatica";
@@ -583,9 +584,9 @@
             grpDays.Controls.Add(chkSaturday);
             grpDays.Controls.Add(chkSunday);
             grpDays.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
-            grpDays.Location = new Point(15, 120);
+            grpDays.Location = new Point(49, 254);
             grpDays.Name = "grpDays";
-            grpDays.Size = new Size(960, 40);
+            grpDays.Size = new Size(990, 40);
             grpDays.TabIndex = 7;
             grpDays.TabStop = false;
             grpDays.Text = "Giorni Settimana";
@@ -677,13 +678,12 @@
             // grpManualSlots
             // 
             grpManualSlots.Controls.Add(flowManualSlots);
-            grpManualSlots.Controls.Add(numDailyPasses);
             grpManualSlots.Controls.Add(btnSelectAllSlots);
             grpManualSlots.Controls.Add(btnDeselectAllSlots);
             grpManualSlots.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
-            grpManualSlots.Location = new Point(0, 0);
+            grpManualSlots.Location = new Point(49, 139);
             grpManualSlots.Name = "grpManualSlots";
-            grpManualSlots.Size = new Size(990, 178);
+            grpManualSlots.Size = new Size(990, 110);
             grpManualSlots.TabIndex = 3;
             grpManualSlots.TabStop = false;
             grpManualSlots.Text = "Selezione Manuale Punti Orari";
@@ -695,7 +695,7 @@
             flowManualSlots.BorderStyle = BorderStyle.FixedSingle;
             flowManualSlots.Location = new Point(15, 55);
             flowManualSlots.Name = "flowManualSlots";
-            flowManualSlots.Size = new Size(960, 117);
+            flowManualSlots.Size = new Size(960, 48);
             flowManualSlots.TabIndex = 0;
             // 
             // btnSelectAllSlots
@@ -728,7 +728,7 @@
             pnlStep3.Controls.Add(progressDays);
             pnlStep3.Controls.Add(lblProgress);
             pnlStep3.Controls.Add(btnConfirmAll);
-            pnlStep3.Location = new Point(20, 733);
+            pnlStep3.Location = new Point(20, 703);
             pnlStep3.Name = "pnlStep3";
             pnlStep3.Size = new Size(1069, 480);
             pnlStep3.TabIndex = 2;
