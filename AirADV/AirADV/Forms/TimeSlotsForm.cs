@@ -642,15 +642,7 @@ namespace AirADV.Forms
 				);
 			}
 			catch (Exception ex)
-			{
-				MessageBox.Show(
-					$"{LanguageManager.Get("TimeSlots.ApplyError", "Errore applicazione configurazione")}:
-{ex.Message}",
-					LanguageManager.Get("Common.Error", "Errore"),
-					MessageBoxButtons.OK,
-					MessageBoxIcon.Error
-				);
-			}
+			{}
 		}
 
 		private void btnDeleteSlots_Click(object sender, EventArgs e)
