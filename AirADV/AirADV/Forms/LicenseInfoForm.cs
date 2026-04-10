@@ -9,133 +9,151 @@ namespace AirADV.Forms
 {
     public partial class LicenseInfoForm : Form
     {
-        private Panel _headerPanel = null!;
-        private Label _titleLabel = null!;
-        private Panel _contentPanel = null!;
-        private Label _serialValueLabel = null!;
-        private Label _ownerValueLabel = null!;
-        private Label _activatedOnValueLabel = null!;
-        private Label _machineIdValueLabel = null!;
-        private Button _removeButton = null!;
-        private Button _closeButton = null!;
+        public bool LicenseRemoved { get; private set; } = false;
 
         public LicenseInfoForm()
         {
             InitializeComponent();
-            InitializeCustomComponents();
-            LoadLicenseInfo();
+            BuildUI();
         }
 
-        private void InitializeCustomComponents()
+        private void BuildUI()
         {
-            this.Text = LanguageManager.GetString("LicenseInfo.Title", "License Information");
-            this.ClientSize = new Size(540, 400);
+            this.Text = LanguageManager.GetString("LicenseInfo.Title", "License Management");
+            this.Size = new Size(520, 420);
             this.StartPosition = FormStartPosition.CenterParent;
             this.FormBorderStyle = FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
-            this.BackColor = Color.FromArgb(245, 245, 250);
+            this.BackColor = Color.FromArgb(30, 30, 30);
 
-            _headerPanel = new Panel
+            // ── Header
+            var pnlHeader = new Panel
             {
                 Dock = DockStyle.Top,
-                Height = 70,
-                BackColor = Color.FromArgb(0, 120, 212)
+                Height = 60,
+                BackColor = Color.FromArgb(20, 20, 20)
             };
 
-            _titleLabel = new Label
+            var lblHeaderIcon = new Label
             {
-                Text = LanguageManager.GetString("LicenseInfo.Title", "License Information"),
-                Font = new Font("Segoe UI", 16, FontStyle.Bold),
+                Text = "🔑",
+                Font = new Font("Segoe UI Emoji", 18F),
                 ForeColor = Color.White,
-                AutoSize = true,
-                Location = new Point(20, 18)
+                Location = new Point(16, 12),
+                Size = new Size(40, 36),
+                TextAlign = ContentAlignment.MiddleCenter
             };
-            _headerPanel.Controls.Add(_titleLabel);
+            pnlHeader.Controls.Add(lblHeaderIcon);
 
-            _contentPanel = new Panel
+            var lblHeaderTitle = new Label
             {
-                BackColor = Color.White,
-                Location = new Point(20, 90),
-                Size = new Size(500, 220)
-            };
-
-            AddInfoRow(_contentPanel, LanguageManager.GetString("LicenseInfo.Serial", "Serial Key:"), out _serialValueLabel, 10);
-            AddInfoRow(_contentPanel, LanguageManager.GetString("LicenseInfo.Owner", "Owner:"), out _ownerValueLabel, 60);
-            AddInfoRow(_contentPanel, LanguageManager.GetString("LicenseInfo.ActivatedOn", "Activated On:"), out _activatedOnValueLabel, 110);
-            AddInfoRow(_contentPanel, LanguageManager.GetString("LicenseInfo.MachineID", "Machine ID:"), out _machineIdValueLabel, 160);
-
-            _removeButton = new Button
-            {
-                Text = LanguageManager.GetString("LicenseInfo.Remove", "Remove License"),
-                Font = new Font("Segoe UI", 10),
-                BackColor = Color.FromArgb(220, 53, 69),
+                Text = LanguageManager.GetString("LicenseInfo.Header", "License Management"),
+                Font = new Font("Segoe UI", 14F, FontStyle.Bold),
                 ForeColor = Color.White,
-                FlatStyle = FlatStyle.Flat,
-                Size = new Size(150, 38),
-                Location = new Point(20, 330),
-                Cursor = Cursors.Hand,
-                Anchor = AnchorStyles.Bottom | AnchorStyles.Left
+                Location = new Point(64, 16),
+                Size = new Size(420, 30),
+                TextAlign = ContentAlignment.MiddleLeft
             };
-            _removeButton.FlatAppearance.BorderSize = 0;
-            _removeButton.Click += RemoveButton_Click;
+            pnlHeader.Controls.Add(lblHeaderTitle);
+            this.Controls.Add(pnlHeader);
 
-            _closeButton = new Button
+            // ── Active badge
+            var lblBadge = new Label
             {
-                Text = LanguageManager.GetString("LicenseInfo.Close", "Close"),
-                Font = new Font("Segoe UI", 10),
-                BackColor = Color.FromArgb(230, 230, 235),
-                ForeColor = Color.FromArgb(40, 40, 50),
-                FlatStyle = FlatStyle.Flat,
-                Size = new Size(100, 38),
-                Location = new Point(420, 330),
-                Cursor = Cursors.Hand,
-                Anchor = AnchorStyles.Bottom | AnchorStyles.Right
+                Text = "✅ " + LanguageManager.GetString("LicenseInfo.Active", "LICENSE ACTIVE"),
+                Font = new Font("Segoe UI", 10F, FontStyle.Bold),
+                ForeColor = Color.White,
+                BackColor = Color.FromArgb(30, 140, 60),
+                Location = new Point(20, 76),
+                Size = new Size(460, 30),
+                TextAlign = ContentAlignment.MiddleCenter
             };
-            _closeButton.FlatAppearance.BorderSize = 0;
-            _closeButton.Click += (s, e) => this.Close();
+            this.Controls.Add(lblBadge);
 
-            this.Controls.Add(_headerPanel);
-            this.Controls.Add(_contentPanel);
-            this.Controls.Add(_removeButton);
-            this.Controls.Add(_closeButton);
-        }
-
-        private void AddInfoRow(Panel parent, string labelText, out Label valueLabel, int y)
-        {
-            var label = new Label
+            // ── License details card
+            var pnlCard = new Panel
             {
-                Text = labelText,
-                Font = new Font("Segoe UI", 9, FontStyle.Bold),
-                ForeColor = Color.FromArgb(100, 100, 110),
-                AutoSize = true,
-                Location = new Point(16, y)
+                Location = new Point(20, 120),
+                Size = new Size(460, 180),
+                BackColor = Color.FromArgb(40, 40, 40),
+                BorderStyle = BorderStyle.FixedSingle
             };
-            valueLabel = new Label
-            {
-                Text = string.Empty,
-                Font = new Font("Segoe UI", 10),
-                ForeColor = Color.FromArgb(30, 30, 40),
-                AutoSize = false,
-                Size = new Size(460, 22),
-                Location = new Point(16, y + 18)
-            };
-            parent.Controls.Add(label);
-            parent.Controls.Add(valueLabel);
-        }
 
-        private void LoadLicenseInfo()
-        {
             var license = LicenseManager.GetCurrentLicense();
-            if (license == null) return;
+            string owner = license?.OwnerName ?? "-";
+            string serial = license?.SerialKey ?? "-";
+            string activatedOn = license?.ActivatedOn.ToString("dd/MM/yyyy HH:mm") ?? "-";
+            string machineId = license?.MachineID ?? "-";
 
-            _serialValueLabel.Text = license.SerialKey;
-            _ownerValueLabel.Text = license.OwnerName;
-            _activatedOnValueLabel.Text = license.ActivatedOn.ToString("dd/MM/yyyy HH:mm");
-            _machineIdValueLabel.Text = license.MachineID;
+            AddCardRow(pnlCard, "👤 " + LanguageManager.GetString("LicenseInfo.Owner", "Owner"), owner, 12);
+            AddCardRow(pnlCard, "🔑 " + LanguageManager.GetString("LicenseInfo.Serial", "Serial Code"), serial, 52);
+            AddCardRow(pnlCard, "📅 " + LanguageManager.GetString("LicenseInfo.ActivatedOn", "Activated On"), activatedOn, 92);
+            AddCardRow(pnlCard, "🖥️ " + LanguageManager.GetString("LicenseInfo.MachineId", "Machine ID"), machineId, 132);
+
+            this.Controls.Add(pnlCard);
+
+            // ── Remove button
+            var btnRemove = new Button
+            {
+                Text = "🗑 " + LanguageManager.GetString("LicenseInfo.BtnRemove", "Remove License"),
+                Location = new Point(20, 320),
+                Size = new Size(200, 42),
+                BackColor = Color.FromArgb(180, 40, 40),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Font = new Font("Segoe UI", 9F, FontStyle.Bold),
+                Cursor = Cursors.Hand
+            };
+            btnRemove.FlatAppearance.BorderSize = 0;
+            btnRemove.Click += BtnRemove_Click;
+            this.Controls.Add(btnRemove);
+
+            // ── Close button
+            var btnClose = new Button
+            {
+                Text = LanguageManager.GetString("Common.Close", "Close"),
+                Location = new Point(360, 320),
+                Size = new Size(120, 42),
+                BackColor = Color.FromArgb(70, 70, 70),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Font = new Font("Segoe UI", 9F),
+                DialogResult = DialogResult.Cancel,
+                Cursor = Cursors.Hand
+            };
+            btnClose.FlatAppearance.BorderSize = 0;
+            this.Controls.Add(btnClose);
+
+            this.CancelButton = btnClose;
         }
 
-        private void RemoveButton_Click(object? sender, EventArgs e)
+        private void AddCardRow(Panel panel, string label, string value, int top)
+        {
+            var lblLabel = new Label
+            {
+                Text = label,
+                Font = new Font("Segoe UI", 8F, FontStyle.Bold),
+                ForeColor = Color.FromArgb(160, 160, 160),
+                Location = new Point(12, top),
+                Size = new Size(160, 24),
+                TextAlign = ContentAlignment.MiddleLeft
+            };
+            panel.Controls.Add(lblLabel);
+
+            var lblValue = new Label
+            {
+                Text = value,
+                Font = new Font("Segoe UI", 9F),
+                ForeColor = Color.White,
+                Location = new Point(180, top),
+                Size = new Size(268, 24),
+                TextAlign = ContentAlignment.MiddleLeft
+            };
+            panel.Controls.Add(lblValue);
+        }
+
+        private void BtnRemove_Click(object sender, EventArgs e)
         {
             using var confirm = new LicenseRemoveConfirmForm();
             if (confirm.ShowDialog(this) != DialogResult.Yes) return;
@@ -143,9 +161,10 @@ namespace AirADV.Forms
             bool ok = LicenseManager.RemoveLicense(out string errorMessage);
             if (ok)
             {
+                LicenseRemoved = true;
                 MessageBox.Show(
                     LanguageManager.GetString("LicenseInfo.RemoveSuccess", "License removed successfully. The application will close."),
-                    LanguageManager.GetString("LicenseInfo.Title", "License Information"),
+                    LanguageManager.GetString("LicenseInfo.Title", "License Management"),
                     MessageBoxButtons.OK, MessageBoxIcon.Information);
                 Application.Exit();
             }
