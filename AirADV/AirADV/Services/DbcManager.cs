@@ -769,5 +769,17 @@ namespace AirADV.Services
                 CreatedDate = DateTime.Now;
             }
         }
+
+        public class CampaignCounter
+        {
+            public int ID { get; set; }
+            public int LastNumber { get; set; }
+
+            public CampaignCounter()
+            {
+                ID = 1;
+                LastNumber = 0;
+            }
+        }
     }
 }
