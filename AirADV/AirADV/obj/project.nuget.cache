@@ -1,0 +1,82 @@
+{
+  "version": 2,
+  "dgSpecHash": "mv7B3zsJ+rU=",
+  "success": true,
+  "projectFilePath": "C:\\Users\\simon\\source\\repos\\AirADV\\AirADV\\AirADV.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\simon\\.nuget\\packages\\bouncycastle\\1.8.9\\bouncycastle.1.8.9.nupkg.sha512",
+    "C:\\Users\\simon\\.nuget\\packages\\itextsharp\\5.5.13.3\\itextsharp.5.5.13.3.nupkg.sha512",
+    "C:\\Users\\simon\\.nuget\\packages\\libvlcsharp\\3.9.6\\libvlcsharp.3.9.6.nupkg.sha512",
+    "C:\\Users\\simon\\.nuget\\packages\\libvlcsharp.winforms\\3.9.6\\libvlcsharp.winforms.3.9.6.nupkg.sha512",
+    "C:\\Users\\simon\\.nuget\\packages\\naudio\\2.2.1\\naudio.2.2.1.nupkg.sha512",
+    "C:\\Users\\simon\\.nuget\\packages\\naudio.asio\\2.2.1\\naudio.asio.2.2.1.nupkg.sha512",
+    "C:\\Users\\simon\\.nuget\\packages\\naudio.core\\2.2.1\\naudio.core.2.2.1.nupkg.sha512",
+    "C:\\Users\\simon\\.nuget\\packages\\naudio.midi\\2.2.1\\naudio.midi.2.2.1.nupkg.sha512",
+    "C:\\Users\\simon\\.nuget\\packages\\naudio.wasapi\\2.2.1\\naudio.wasapi.2.2.1.nupkg.sha512",
+    "C:\\Users\\simon\\.nuget\\packages\\naudio.winforms\\2.2.1\\naudio.winforms.2.2.1.nupkg.sha512",
+    "C:\\Users\\simon\\.nuget\\packages\\naudio.winmm\\2.2.1\\naudio.winmm.2.2.1.nupkg.sha512",
+    "C:\\Users\\simon\\.nuget\\packages\\videolan.libvlc.windows\\3.0.23\\videolan.libvlc.windows.3.0.23.nupkg.sha512"
+  ],
+  "logs": [
+    {
+      "code": "NU1902",
+      "level": "Warning",
+      "message": "Il pacchetto 'BouncyCastle' 1.8.9 presenta una vulnerabilità nota di gravità moderata, https://github.com/advisories/GHSA-8xfc-gm6g-vgpv",
+      "projectPath": "C:\\Users\\simon\\source\\repos\\AirADV\\AirADV\\AirADV.csproj",
+      "warningLevel": 1,
+      "filePath": "C:\\Users\\simon\\source\\repos\\AirADV\\AirADV\\AirADV.csproj",
+      "libraryId": "BouncyCastle",
+      "targetGraphs": [
+        "net10.0-windows"
+      ]
+    },
+    {
+      "code": "NU1902",
+      "level": "Warning",
+      "message": "Il pacchetto 'BouncyCastle' 1.8.9 presenta una vulnerabilità nota di gravità moderata, https://github.com/advisories/GHSA-m44j-cfrm-g8qc",
+      "projectPath": "C:\\Users\\simon\\source\\repos\\AirADV\\AirADV\\AirADV.csproj",
+      "warningLevel": 1,
+      "filePath": "C:\\Users\\simon\\source\\repos\\AirADV\\AirADV\\AirADV.csproj",
+      "libraryId": "BouncyCastle",
+      "targetGraphs": [
+        "net10.0-windows"
+      ]
+    },
+    {
+      "code": "NU1902",
+      "level": "Warning",
+      "message": "Il pacchetto 'BouncyCastle' 1.8.9 presenta una vulnerabilità nota di gravità moderata, https://github.com/advisories/GHSA-v435-xc8x-wvr9",
+      "projectPath": "C:\\Users\\simon\\source\\repos\\AirADV\\AirADV\\AirADV.csproj",
+      "warningLevel": 1,
+      "filePath": "C:\\Users\\simon\\source\\repos\\AirADV\\AirADV\\AirADV.csproj",
+      "libraryId": "BouncyCastle",
+      "targetGraphs": [
+        "net10.0-windows"
+      ]
+    },
+    {
+      "code": "NU1701",
+      "level": "Warning",
+      "message": "Il pacchetto 'BouncyCastle 1.8.9' è stato ripristinato mediante '.NETFramework,Version=v4.6.1, .NETFramework,Version=v4.6.2, .NETFramework,Version=v4.7, .NETFramework,Version=v4.7.1, .NETFramework,Version=v4.7.2, .NETFramework,Version=v4.8, .NETFramework,Version=v4.8.1' e non mediante il framework di destinazione del progetto 'net10.0-windows7.0'. Questo pacchetto potrebbe non essere completamente compatibile con il progetto.",
+      "projectPath": "C:\\Users\\simon\\source\\repos\\AirADV\\AirADV\\AirADV.csproj",
+      "warningLevel": 1,
+      "filePath": "C:\\Users\\simon\\source\\repos\\AirADV\\AirADV\\AirADV.csproj",
+      "libraryId": "BouncyCastle",
+      "targetGraphs": [
+        "net10.0-windows"
+      ]
+    },
+    {
+      "code": "NU1701",
+      "level": "Warning",
+      "message": "Il pacchetto 'iTextSharp 5.5.13.3' è stato ripristinato mediante '.NETFramework,Version=v4.6.1, .NETFramework,Version=v4.6.2, .NETFramework,Version=v4.7, .NETFramework,Version=v4.7.1, .NETFramework,Version=v4.7.2, .NETFramework,Version=v4.8, .NETFramework,Version=v4.8.1' e non mediante il framework di destinazione del progetto 'net10.0-windows7.0'. Questo pacchetto potrebbe non essere completamente compatibile con il progetto.",
+      "projectPath": "C:\\Users\\simon\\source\\repos\\AirADV\\AirADV\\AirADV.csproj",
+      "warningLevel": 1,
+      "filePath": "C:\\Users\\simon\\source\\repos\\AirADV\\AirADV\\AirADV.csproj",
+      "libraryId": "iTextSharp",
+      "targetGraphs": [
+        "net10.0-windows"
+      ]
+    }
+  ]
+}
