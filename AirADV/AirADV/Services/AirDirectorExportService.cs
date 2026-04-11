@@ -20,13 +20,6 @@ namespace AirADV.Services
                 Console.WriteLine($"[AirDirectorExport] Inizio export palinsesto per stazione {stationID}");
                 Console.WriteLine($"[AirDirectorExport] Periodo: {startDate: dd/MM/yyyy} - {endDate:dd/MM/yyyy}");
 
-                // ✅ CARICA TIMESLOTS PER CONFIGURAZIONE INFRASPOT
-                var timeSlots = DbcManager.Load<DbcManager.TimeSlot>("ADV_TimeSlots.dbc")
-                    .Where(t => t.StationID == stationID && t.IsActive)
-                    .ToList();
-
-                Console.WriteLine($"[AirDirectorExport] Caricati {timeSlots.Count} TimeSlots configurati");
-
                 // Carica dati necessari
                 var schedules = DbcManager.Load<DbcManager.Schedule>("ADV_Schedule.dbc")
                     .Where(s => s.StationID == stationID &&
@@ -75,20 +68,6 @@ namespace AirADV.Services
 
                     Console.WriteLine($"[AirDirectorExport] 📅 Slot: {slotGroup.Key.ScheduleDate:dd/MM/yyyy} {slotGroup.Key.SlotTime}");
 
-                    // ✅ TROVA CONFIGURAZIONE INFRASPOT PER QUESTO SLOT
-                    var timeSlot = timeSlots.FirstOrDefault(t => t.SlotTime == slotGroup.Key.SlotTime);
-                    string infraSpotPath = timeSlot?.InfraSpotFile;
-                    bool hasInfraSpotConfigured = !string.IsNullOrEmpty(infraSpotPath) && File.Exists(infraSpotPath);
-
-                    if (hasInfraSpotConfigured)
-                    {
-                        Console.WriteLine($"[AirDirectorExport]   🔹 Infraspot configurato: {Path.GetFileName(infraSpotPath)}");
-                    }
-                    else
-                    {
-                        Console.WriteLine($"[AirDirectorExport]   ⚠️ Nessun infraspot configurato per questo slot");
-                    }
-
                     int sequenceOrder = 1;
                     bool openingAdded = false;
                     bool closingAdded = false;
@@ -104,7 +83,7 @@ namespace AirADV.Services
                         switch (schedule.FileType)
                         {
                             case "OPENING":
-                                if (!openingAdded && !string.IsNullOrEmpty(schedule.FilePath) && File.Exists(schedule.FilePath))
+                                if (!openingAdded && !string.IsNullOrEmpty(schedule.FilePath))
                                 {
                                     item = CreatePlaylistItem(schedule, idCounter++, sequenceOrder++, clients, spots, campaigns, categories);
                                     playlist.Add(item);
@@ -114,50 +93,28 @@ namespace AirADV.Services
                                 break;
 
                             case "SPOT":
-                                if (!string.IsNullOrEmpty(schedule.FilePath) && File.Exists(schedule.FilePath))
+                                if (!string.IsNullOrEmpty(schedule.FilePath))
                                 {
                                     spotCount++;
                                     item = CreatePlaylistItem(schedule, idCounter++, sequenceOrder++, clients, spots, campaigns, categories);
                                     playlist.Add(item);
                                     Console.WriteLine($"[AirDirectorExport]   🎵 {sequenceOrder - 1}.SPOT {spotCount}/{spotItems.Count}:  {Path.GetFileName(schedule.FilePath)}");
-
-                                    // ✅ AGGIUNGI INFRASPOT DOPO QUESTO SPOT (se configurato e non è l'ultimo spot)
-                                    if (hasInfraSpotConfigured && spotCount < spotItems.Count)
-                                    {
-                                        var infraItem = new DbcManager.AirDirectorPlaylistItem
-                                        {
-                                            ID = idCounter++,
-                                            Date = slotGroup.Key.ScheduleDate,
-                                            SlotTime = slotGroup.Key.SlotTime,
-                                            SequenceOrder = sequenceOrder++,
-                                            FileType = "INFRASPOT",
-                                            FilePath = infraSpotPath,
-                                            Duration = 3,
-                                            ClientName = "",
-                                            SpotTitle = "",
-                                            CampaignName = "",
-                                            CategoryName = "",
-                                            IsActive = true
-                                        };
-
-                                        playlist.Add(infraItem);
-                                        infraSpotAddedCount++;
-                                        totalInfraSpots++;
-                                        Console.WriteLine($"[AirDirectorExport]   🔹 {sequenceOrder - 1}. INFRASPOT:  {Path.GetFileName(infraSpotPath)} (dopo spot {spotCount})");
-                                    }
-                                    else if (spotCount == spotItems.Count)
-                                    {
-                                        Console.WriteLine($"[AirDirectorExport]   ⏭️ Infraspot NON aggiunto (spot {spotCount} è l'ultimo)");
-                                    }
                                 }
                                 break;
 
                             case "INFRASPOT":
-                                // ✅ Non elaborare qui, viene gestito dopo ogni SPOT
+                                if (!string.IsNullOrEmpty(schedule.FilePath))
+                                {
+                                    item = CreatePlaylistItem(schedule, idCounter++, sequenceOrder++, clients, spots, campaigns, categories);
+                                    playlist.Add(item);
+                                    infraSpotAddedCount++;
+                                    totalInfraSpots++;
+                                    Console.WriteLine($"[AirDirectorExport]   🔹 {sequenceOrder - 1}. INFRASPOT:  {Path.GetFileName(schedule.FilePath)}");
+                                }
                                 break;
 
                             case "CLOSING":
-                                if (!closingAdded && !string.IsNullOrEmpty(schedule.FilePath) && File.Exists(schedule.FilePath))
+                                if (!closingAdded && !string.IsNullOrEmpty(schedule.FilePath))
                                 {
                                     item = CreatePlaylistItem(schedule, idCounter++, sequenceOrder++, clients, spots, campaigns, categories);
                                     playlist.Add(item);
