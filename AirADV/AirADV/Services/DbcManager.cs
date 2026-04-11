@@ -731,9 +731,6 @@ namespace AirADV.Services
             public int Duration { get; set; }
             public string ClientName { get; set; }
             public string SpotTitle { get; set; }
-            public string CampaignName { get; set; }
-            public string CategoryName { get; set; }
-            public bool IsActive { get; set; }
 
             public AirDirectorPlaylistItem()
             {
@@ -743,9 +740,6 @@ namespace AirADV.Services
                 FilePath = "";
                 ClientName = "";
                 SpotTitle = "";
-                CampaignName = "";
-                CategoryName = "";
-                IsActive = true;
             }
         }
 

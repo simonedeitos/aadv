@@ -1,13 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text;
 
 namespace AirADV.Services
 {
     public static class AirDirectorExportService
     {
         private const string EXPORT_FILENAME = "ADV_AirDirector.dbc";
+        private const string DATE_FORMAT = "dd/MM/yyyy HH:mm:ss";
 
         /// <summary>
         /// Esporta palinsesto completo per AirDirector
@@ -32,8 +35,6 @@ namespace AirADV.Services
 
                 var clients = DbcManager.Load<DbcManager.Client>("ADV_Clients.dbc");
                 var spots = DbcManager.Load<DbcManager.Spot>("ADV_Spots.dbc");
-                var campaigns = DbcManager.Load<DbcManager.Campaign>("ADV_Campaigns.dbc");
-                var categories = DbcManager.Load<DbcManager.Category>("ADV_Categories.dbc");
 
                 Console.WriteLine($"[AirDirectorExport] Trovati {schedules.Count} record da processare");
 
@@ -85,7 +86,7 @@ namespace AirADV.Services
                             case "OPENING":
                                 if (!openingAdded && !string.IsNullOrEmpty(schedule.FilePath))
                                 {
-                                    item = CreatePlaylistItem(schedule, idCounter++, sequenceOrder++, clients, spots, campaigns, categories);
+                                    item = CreatePlaylistItem(schedule, idCounter++, sequenceOrder++, clients, spots);
                                     playlist.Add(item);
                                     openingAdded = true;
                                     Console.WriteLine($"[AirDirectorExport]   📢 {sequenceOrder - 1}.OPENING: {Path.GetFileName(schedule.FilePath)}");
@@ -96,7 +97,7 @@ namespace AirADV.Services
                                 if (!string.IsNullOrEmpty(schedule.FilePath))
                                 {
                                     spotCount++;
-                                    item = CreatePlaylistItem(schedule, idCounter++, sequenceOrder++, clients, spots, campaigns, categories);
+                                    item = CreatePlaylistItem(schedule, idCounter++, sequenceOrder++, clients, spots);
                                     playlist.Add(item);
                                     Console.WriteLine($"[AirDirectorExport]   🎵 {sequenceOrder - 1}.SPOT {spotCount}/{spotItems.Count}:  {Path.GetFileName(schedule.FilePath)}");
                                 }
@@ -105,7 +106,7 @@ namespace AirADV.Services
                             case "INFRASPOT":
                                 if (!string.IsNullOrEmpty(schedule.FilePath))
                                 {
-                                    item = CreatePlaylistItem(schedule, idCounter++, sequenceOrder++, clients, spots, campaigns, categories);
+                                    item = CreatePlaylistItem(schedule, idCounter++, sequenceOrder++, clients, spots);
                                     playlist.Add(item);
                                     infraSpotAddedCount++;
                                     totalInfraSpots++;
@@ -116,7 +117,7 @@ namespace AirADV.Services
                             case "CLOSING":
                                 if (!closingAdded && !string.IsNullOrEmpty(schedule.FilePath))
                                 {
-                                    item = CreatePlaylistItem(schedule, idCounter++, sequenceOrder++, clients, spots, campaigns, categories);
+                                    item = CreatePlaylistItem(schedule, idCounter++, sequenceOrder++, clients, spots);
                                     playlist.Add(item);
                                     closingAdded = true;
                                     Console.WriteLine($"[AirDirectorExport]   📢 {sequenceOrder - 1}. CLOSING: {Path.GetFileName(schedule.FilePath)}");
@@ -136,7 +137,7 @@ namespace AirADV.Services
 
                 // Salva file
                 string exportPath = Path.Combine(ConfigManager.CurrentStationDatabasePath, EXPORT_FILENAME);
-                bool success = DbcManager.Save(EXPORT_FILENAME, playlist);
+                bool success = SaveAirDirectorDbc(playlist);
 
                 if (success)
                 {
@@ -174,9 +175,7 @@ namespace AirADV.Services
             int id,
             int sequenceOrder,
             List<DbcManager.Client> clients,
-            List<DbcManager.Spot> spots,
-            List<DbcManager.Campaign> campaigns,
-            List<DbcManager.Category> categories)
+            List<DbcManager.Spot> spots)
         {
             var item = new DbcManager.AirDirectorPlaylistItem
             {
@@ -186,8 +185,7 @@ namespace AirADV.Services
                 SequenceOrder = sequenceOrder,
                 FileType = schedule.FileType,
                 FilePath = schedule.FilePath,
-                Duration = schedule.Duration,
-                IsActive = true
+                Duration = schedule.Duration
             };
 
             // Se è uno SPOT, aggiungi info dettagliate
@@ -195,13 +193,9 @@ namespace AirADV.Services
             {
                 var client = clients.FirstOrDefault(c => c.ID == schedule.ClientID);
                 var spot = spots.FirstOrDefault(s => s.ID == schedule.SpotID);
-                var campaign = campaigns.FirstOrDefault(c => c.ID == schedule.CampaignID);
-                var category = campaign != null ? categories.FirstOrDefault(cat => cat.ID == campaign.CategoryID) : null;
 
                 item.ClientName = client?.ClientName ?? "";
                 item.SpotTitle = spot?.SpotTitle ?? "";
-                item.CampaignName = campaign?.CampaignName ?? "";
-                item.CategoryName = category?.CategoryName ?? "";
             }
 
             return item;
@@ -227,6 +221,123 @@ namespace AirADV.Services
         }
 
         /// <summary>
+        /// Salva il file ADV_AirDirector.dbc con separatore ; e campi tra apici doppi
+        /// </summary>
+        private static bool SaveAirDirectorDbc(List<DbcManager.AirDirectorPlaylistItem> playlist)
+        {
+            try
+            {
+                var sb = new StringBuilder();
+                sb.AppendLine("\"ID\";\"Date\";\"SlotTime\";\"SequenceOrder\";\"FileType\";\"FilePath\";\"Duration\";\"ClientName\";\"SpotTitle\"");
+
+                foreach (var item in playlist)
+                {
+                    sb.AppendLine(string.Join(";", new[]
+                    {
+                        $"\"{item.ID}\"",
+                        $"\"{item.Date.ToString(DATE_FORMAT)}\"",
+                        $"\"{Escape(item.SlotTime)}\"",
+                        $"\"{item.SequenceOrder}\"",
+                        $"\"{Escape(item.FileType)}\"",
+                        $"\"{Escape(item.FilePath)}\"",
+                        $"\"{item.Duration}\"",
+                        $"\"{Escape(item.ClientName)}\"",
+                        $"\"{Escape(item.SpotTitle)}\""
+                    }));
+                }
+
+                string csvContent = sb.ToString();
+                string fileNameOnly = EXPORT_FILENAME;
+                bool centralSuccess = false;
+                bool stationSuccess = false;
+
+                try
+                {
+                    string centralPath = Path.Combine(ConfigManager.DATABASE_PATH, fileNameOnly);
+                    Directory.CreateDirectory(Path.GetDirectoryName(centralPath));
+                    File.WriteAllText(centralPath, csvContent, Encoding.UTF8);
+                    centralSuccess = true;
+                    Console.WriteLine($"[AirDirectorExport] ✅ Salvato in Database CENTRALE: {fileNameOnly}");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[AirDirectorExport] ⚠️ Errore salvataggio centrale {fileNameOnly}: {ex.Message}");
+                }
+
+                try
+                {
+                    string stationPath = Path.Combine(ConfigManager.CurrentStationDatabasePath, fileNameOnly);
+                    Directory.CreateDirectory(Path.GetDirectoryName(stationPath));
+                    File.WriteAllText(stationPath, csvContent, Encoding.UTF8);
+                    stationSuccess = true;
+                    Console.WriteLine($"[AirDirectorExport] ✅ Salvato in Database EMITTENTE: {fileNameOnly} ({playlist.Count} record)");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[AirDirectorExport] ❌ Errore salvataggio emittente {fileNameOnly}: {ex.Message}");
+                }
+
+                return centralSuccess || stationSuccess;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[AirDirectorExport] ❌ Errore salvataggio {EXPORT_FILENAME}: {ex.Message}");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Carica il file ADV_AirDirector.dbc nel formato con separatore ; e campi tra apici doppi
+        /// </summary>
+        private static List<DbcManager.AirDirectorPlaylistItem> LoadAirDirectorDbc()
+        {
+            var result = new List<DbcManager.AirDirectorPlaylistItem>();
+            try
+            {
+                string filePath = Path.Combine(ConfigManager.CurrentStationDatabasePath, EXPORT_FILENAME);
+                if (!File.Exists(filePath))
+                    filePath = Path.Combine(ConfigManager.DATABASE_PATH, EXPORT_FILENAME);
+
+                if (!File.Exists(filePath))
+                    return result;
+
+                var lines = File.ReadAllLines(filePath, Encoding.UTF8);
+                foreach (var line in lines.Skip(1))
+                {
+                    if (string.IsNullOrWhiteSpace(line))
+                        continue;
+
+                    var fields = line.Split(';')
+                        .Select(f => f.Trim().Trim('"').Replace("\"\"", "\""))
+                        .ToArray();
+
+                    if (fields.Length < 9)
+                        continue;
+
+                    var item = new DbcManager.AirDirectorPlaylistItem();
+                    if (int.TryParse(fields[0], out int id)) item.ID = id;
+                    if (DateTime.TryParseExact(fields[1], DATE_FORMAT,
+                        CultureInfo.InvariantCulture,
+                        DateTimeStyles.None, out DateTime date)) item.Date = date;
+                    item.SlotTime = fields[2];
+                    if (int.TryParse(fields[3], out int seq)) item.SequenceOrder = seq;
+                    item.FileType = fields[4];
+                    item.FilePath = fields[5];
+                    if (int.TryParse(fields[6], out int dur)) item.Duration = dur;
+                    item.ClientName = fields[7];
+                    item.SpotTitle = fields[8];
+
+                    result.Add(item);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[AirDirectorExport] ⚠️ Errore caricamento {EXPORT_FILENAME}: {ex.Message}");
+            }
+            return result;
+        }
+
+        /// <summary>
         /// Genera file di metadati con informazioni aggiuntive
         /// </summary>
         private static void GenerateMetadataFile(int stationID, DateTime startDate, DateTime endDate, int totalItems, string playlistPath)
@@ -249,7 +360,7 @@ namespace AirADV.Services
                     $"PlaylistFile={Path.GetFileName(playlistPath)}",
                     "",
                     "# File Format:",
-                    "# Date,SlotTime,SequenceOrder,FileType,FilePath,Duration,ClientName,SpotTitle,CampaignName,CategoryName,IsActive"
+                    "# \"ID\";\"Date\";\"SlotTime\";\"SequenceOrder\";\"FileType\";\"FilePath\";\"Duration\";\"ClientName\";\"SpotTitle\""
                 };
             }
             catch (Exception ex)
@@ -273,7 +384,7 @@ namespace AirADV.Services
                     return false;
                 }
 
-                var playlist = DbcManager.Load<DbcManager.AirDirectorPlaylistItem>(EXPORT_FILENAME);
+                var playlist = LoadAirDirectorDbc();
 
                 int missingFiles = 0;
                 foreach (var item in playlist)
@@ -308,7 +419,7 @@ namespace AirADV.Services
         {
             try
             {
-                var playlist = DbcManager.Load<DbcManager.AirDirectorPlaylistItem>(EXPORT_FILENAME);
+                var playlist = LoadAirDirectorDbc();
 
                 var stats = new ExportStats
                 {
@@ -329,6 +440,11 @@ namespace AirADV.Services
             {
                 return new ExportStats();
             }
+        }
+
+        private static string Escape(string value)
+        {
+            return (value ?? "").Replace("\"", "\"\"");
         }
 
         public class ExportStats
