@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -307,7 +308,7 @@ namespace AirADV.Services
                         continue;
 
                     var fields = line.Split(';')
-                        .Select(f => f.Trim().Trim('"'))
+                        .Select(f => f.Trim().Trim('"').Replace("\"\"", "\""))
                         .ToArray();
 
                     if (fields.Length < 9)
@@ -316,8 +317,8 @@ namespace AirADV.Services
                     var item = new DbcManager.AirDirectorPlaylistItem();
                     if (int.TryParse(fields[0], out int id)) item.ID = id;
                     if (DateTime.TryParseExact(fields[1], DATE_FORMAT,
-                        System.Globalization.CultureInfo.InvariantCulture,
-                        System.Globalization.DateTimeStyles.None, out DateTime date)) item.Date = date;
+                        CultureInfo.InvariantCulture,
+                        DateTimeStyles.None, out DateTime date)) item.Date = date;
                     item.SlotTime = fields[2];
                     if (int.TryParse(fields[3], out int seq)) item.SequenceOrder = seq;
                     item.FileType = fields[4];
