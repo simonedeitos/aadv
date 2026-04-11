@@ -35,6 +35,9 @@ namespace AirADV.Services
 
                 var clients = DbcManager.Load<DbcManager.Client>("ADV_Clients.dbc");
                 var spots = DbcManager.Load<DbcManager.Spot>("ADV_Spots.dbc");
+                var timeSlots = DbcManager.Load<DbcManager.TimeSlot>("ADV_TimeSlots.dbc")
+                    .Where(t => t.StationID == stationID && t.IsActive)
+                    .ToList();
 
                 Console.WriteLine($"[AirDirectorExport] Trovati {schedules.Count} record da processare");
 
@@ -69,6 +72,9 @@ namespace AirADV.Services
 
                     Console.WriteLine($"[AirDirectorExport] 📅 Slot: {slotGroup.Key.ScheduleDate:dd/MM/yyyy} {slotGroup.Key.SlotTime}");
 
+                    // Cerca il TimeSlot aggiornato corrispondente a questo punto orario
+                    var timeSlot = timeSlots.FirstOrDefault(ts => ts.SlotTime == slotGroup.Key.SlotTime);
+
                     int sequenceOrder = 1;
                     bool openingAdded = false;
                     bool closingAdded = false;
@@ -84,12 +90,20 @@ namespace AirADV.Services
                         switch (schedule.FileType)
                         {
                             case "OPENING":
-                                if (!openingAdded && !string.IsNullOrEmpty(schedule.FilePath))
+                                if (!openingAdded)
                                 {
-                                    item = CreatePlaylistItem(schedule, idCounter++, sequenceOrder++, clients, spots);
-                                    playlist.Add(item);
-                                    openingAdded = true;
-                                    Console.WriteLine($"[AirDirectorExport]   📢 {sequenceOrder - 1}.OPENING: {Path.GetFileName(schedule.FilePath)}");
+                                    string openingPath = !string.IsNullOrEmpty(timeSlot?.OpeningFile) ? timeSlot.OpeningFile : schedule.FilePath;
+                                    if (!string.IsNullOrEmpty(openingPath))
+                                    {
+                                        var openingSchedule = new DbcManager.Schedule { ID = schedule.ID, StationID = schedule.StationID, ScheduleDate = schedule.ScheduleDate, SlotTime = schedule.SlotTime, SequenceOrder = schedule.SequenceOrder, FileType = schedule.FileType, FilePath = openingPath, ClientID = schedule.ClientID, SpotID = schedule.SpotID, CampaignID = schedule.CampaignID, Duration = schedule.Duration, IsManual = schedule.IsManual };
+                                        item = CreatePlaylistItem(openingSchedule, idCounter++, sequenceOrder++, clients, spots);
+                                        playlist.Add(item);
+                                        openingAdded = true;
+                                        if (timeSlot != null && !string.IsNullOrEmpty(timeSlot.OpeningFile))
+                                            Console.WriteLine($"[AirDirectorExport] 🔄 OPENING aggiornato da TimeSlot: {Path.GetFileName(openingPath)}");
+                                        else
+                                            Console.WriteLine($"[AirDirectorExport]   📢 {sequenceOrder - 1}.OPENING: {Path.GetFileName(openingPath)}");
+                                    }
                                 }
                                 break;
 
@@ -104,23 +118,38 @@ namespace AirADV.Services
                                 break;
 
                             case "INFRASPOT":
-                                if (!string.IsNullOrEmpty(schedule.FilePath))
                                 {
-                                    item = CreatePlaylistItem(schedule, idCounter++, sequenceOrder++, clients, spots);
-                                    playlist.Add(item);
-                                    infraSpotAddedCount++;
-                                    totalInfraSpots++;
-                                    Console.WriteLine($"[AirDirectorExport]   🔹 {sequenceOrder - 1}. INFRASPOT:  {Path.GetFileName(schedule.FilePath)}");
+                                    string infraSpotPath = !string.IsNullOrEmpty(timeSlot?.InfraSpotFile) ? timeSlot.InfraSpotFile : schedule.FilePath;
+                                    if (!string.IsNullOrEmpty(infraSpotPath))
+                                    {
+                                        var infraSchedule = new DbcManager.Schedule { ID = schedule.ID, StationID = schedule.StationID, ScheduleDate = schedule.ScheduleDate, SlotTime = schedule.SlotTime, SequenceOrder = schedule.SequenceOrder, FileType = schedule.FileType, FilePath = infraSpotPath, ClientID = schedule.ClientID, SpotID = schedule.SpotID, CampaignID = schedule.CampaignID, Duration = schedule.Duration, IsManual = schedule.IsManual };
+                                        item = CreatePlaylistItem(infraSchedule, idCounter++, sequenceOrder++, clients, spots);
+                                        playlist.Add(item);
+                                        infraSpotAddedCount++;
+                                        totalInfraSpots++;
+                                        if (timeSlot != null && !string.IsNullOrEmpty(timeSlot.InfraSpotFile))
+                                            Console.WriteLine($"[AirDirectorExport] 🔄 INFRASPOT aggiornato da TimeSlot: {Path.GetFileName(infraSpotPath)}");
+                                        else
+                                            Console.WriteLine($"[AirDirectorExport]   🔹 {sequenceOrder - 1}. INFRASPOT:  {Path.GetFileName(infraSpotPath)}");
+                                    }
                                 }
                                 break;
 
                             case "CLOSING":
-                                if (!closingAdded && !string.IsNullOrEmpty(schedule.FilePath))
+                                if (!closingAdded)
                                 {
-                                    item = CreatePlaylistItem(schedule, idCounter++, sequenceOrder++, clients, spots);
-                                    playlist.Add(item);
-                                    closingAdded = true;
-                                    Console.WriteLine($"[AirDirectorExport]   📢 {sequenceOrder - 1}. CLOSING: {Path.GetFileName(schedule.FilePath)}");
+                                    string closingPath = !string.IsNullOrEmpty(timeSlot?.ClosingFile) ? timeSlot.ClosingFile : schedule.FilePath;
+                                    if (!string.IsNullOrEmpty(closingPath))
+                                    {
+                                        var closingSchedule = new DbcManager.Schedule { ID = schedule.ID, StationID = schedule.StationID, ScheduleDate = schedule.ScheduleDate, SlotTime = schedule.SlotTime, SequenceOrder = schedule.SequenceOrder, FileType = schedule.FileType, FilePath = closingPath, ClientID = schedule.ClientID, SpotID = schedule.SpotID, CampaignID = schedule.CampaignID, Duration = schedule.Duration, IsManual = schedule.IsManual };
+                                        item = CreatePlaylistItem(closingSchedule, idCounter++, sequenceOrder++, clients, spots);
+                                        playlist.Add(item);
+                                        closingAdded = true;
+                                        if (timeSlot != null && !string.IsNullOrEmpty(timeSlot.ClosingFile))
+                                            Console.WriteLine($"[AirDirectorExport] 🔄 CLOSING aggiornato da TimeSlot: {Path.GetFileName(closingPath)}");
+                                        else
+                                            Console.WriteLine($"[AirDirectorExport]   📢 {sequenceOrder - 1}. CLOSING: {Path.GetFileName(closingPath)}");
+                                    }
                                 }
                                 break;
                         }
