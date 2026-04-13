@@ -359,6 +359,7 @@
             cmbCategory.Name = "cmbCategory";
             cmbCategory.Size = new Size(265, 25);
             cmbCategory.TabIndex = 14;
+            cmbCategory.SelectedIndexChanged += cmbCategory_SelectedIndexChanged;
             // 
             // btnAddCategory
             // 

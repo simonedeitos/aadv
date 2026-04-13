@@ -84,7 +84,9 @@ namespace AirADV.Forms
         {
             InitializeComponent();
             _stationID = stationID;
+            this.KeyPreview = true;
             this.Load += ClientManagementForm_Load;
+            this.KeyDown += ClientManagementForm_KeyDown;
         }
 
         private void ClientManagementForm_Load(object sender, EventArgs e)
@@ -166,15 +168,14 @@ namespace AirADV.Forms
                 pnlVideoPreview.Visible = true;
                 lblVideoTitle.Text = $"📺 {title}";
 
-                // Carica media in VLC e avvia automaticamente
+                // Carica media in VLC (senza avvio automatico)
                 var media = new Media(_libVLC, new Uri(filePath));
                 _vlcMediaPlayer.Media = media;
-                _vlcMediaPlayer.Play();
 
                 // Aggiorna stato player
                 lblPlayerStatus.Text = $"📺 {title}";
                 btnPlaySpot.Enabled = true;
-                btnPlaySpot.Text = "⏸";
+                btnPlaySpot.Text = "▶";
 
                 Console.WriteLine($"[ClientManagement] 📺 Video caricato: {filePath}");
             }
@@ -1035,10 +1036,9 @@ namespace AirADV.Forms
                                     if (_audioPlayer != null && _audioPlayer.IsPlaying)
                                         _audioPlayer.Stop();
                                     _audioPlayer.Load(firstSpot.FilePath);
-                                    _audioPlayer.Play();
                                     lblPlayerStatus.Text = $"🎵 {firstSpot.SpotTitle}";
                                     btnPlaySpot.Enabled = true;
-                                    btnPlaySpot.Text = "⏸";
+                                    btnPlaySpot.Text = "▶";
                                 }
                             }
                             catch (Exception ex)
@@ -1212,12 +1212,12 @@ namespace AirADV.Forms
                     {
                         if (IsVideoFile(spot.FilePath))
                         {
-                            // ✅ FILE VIDEO → mostra mini-monitor VLC
+                            // ✅ FILE VIDEO → mostra mini-monitor VLC (senza autoplay)
                             ShowVideoPreview(spot.FilePath, spot.SpotTitle);
                         }
                         else
                         {
-                            // ✅ FILE AUDIO → usa AudioManager
+                            // ✅ FILE AUDIO → carica nel player (senza autoplay)
                             HideVideoPreview();
 
                             if (_audioPlayer != null && _audioPlayer.IsPlaying)
@@ -1226,10 +1226,9 @@ namespace AirADV.Forms
                             }
 
                             _audioPlayer.Load(spot.FilePath);
-                            _audioPlayer.Play();
                             lblPlayerStatus.Text = $"🎵 {spot.SpotTitle}";
                             btnPlaySpot.Enabled = true;
-                            btnPlaySpot.Text = "⏸";
+                            btnPlaySpot.Text = "▶";
                         }
                     }
                     else
@@ -1266,7 +1265,7 @@ namespace AirADV.Forms
                     else
                     {
                         _vlcMediaPlayer.Play();
-                        btnPlaySpot.Text = "⏸";
+                        btnPlaySpot.Text = "❚❚";
                     }
                 }
                 else
@@ -1282,7 +1281,7 @@ namespace AirADV.Forms
                     else
                     {
                         _audioPlayer.Play();
-                        btnPlaySpot.Text = "⏸";
+                        btnPlaySpot.Text = "❚❚";
                     }
                 }
             }
@@ -1315,13 +1314,14 @@ namespace AirADV.Forms
             return $"SPOT-{(maxNum + 1):D3}";
         }
 
-        private void btnStopSpot_Click(object sender, EventArgs e)
+        private void ClientManagementForm_KeyDown(object sender, KeyEventArgs e)
         {
-            StopAllPlayback();
-            HideVideoPreview();
-            btnPlaySpot.Text = "▶";
-            btnPlaySpot.Enabled = false;
-            lblPlayerStatus.Text = LanguageManager.Get("ClientManagement.NoFileLoaded", "Nessun file caricato");
+            if (e.KeyCode == Keys.Space && btnPlaySpot.Enabled)
+            {
+                e.SuppressKeyPress = true;
+                e.Handled = true;
+                btnPlaySpot_Click(sender, EventArgs.Empty);
+            }
         }
 
         // ═══════════════════════════════════════════════════════════
