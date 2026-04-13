@@ -62,8 +62,8 @@ namespace AirADV.Services
                     Console.WriteLine($"[ScheduleEngine] Riduzione automatica a {validSlots.Count} passaggi/giorno");
                 }
 
-                // ✅ NUOVO: Genera con rotazione orari se richiesto
-                int rotationOffset = 0;
+                // ✅ NUOVO: Genera con memoria orari del giorno precedente per evitare ripetizioni
+                List<string> previousDaySlots = new List<string>();
                 int totalDays = 0;
 
                 for (DateTime date = campaign.StartDate.Date; date <= campaign.EndDate.Date; date = date.AddDays(1))
@@ -78,14 +78,28 @@ namespace AirADV.Services
                         IsModified = false
                     };
 
-                    // ✅ NUOVO: Applica rotazione se richiesta
-                    List<DbcManager.TimeSlot> slotsForToday = validSlots;
+                    // ✅ Evita ripetizioni: escludi gli slot usati il giorno precedente
+                    List<DbcManager.TimeSlot> slotsForToday;
 
-                    if (avoidRepetition && totalDays > 0)
+                    if (avoidRepetition && previousDaySlots.Count > 0)
                     {
-                        // Ruota gli slot in base al giorno
-                        slotsForToday = RotateSlots(validSlots, rotationOffset);
-                        rotationOffset = (rotationOffset + 1) % Math.Max(1, validSlots.Count / campaign.DailyPasses);
+                        var availableToday = validSlots.Where(s => !previousDaySlots.Contains(s.SlotTime)).ToList();
+
+                        if (availableToday.Count >= campaign.DailyPasses)
+                        {
+                            slotsForToday = availableToday;
+                        }
+                        else
+                        {
+                            // Fallback: usa quelli disponibili + riempi con quelli precedenti
+                            slotsForToday = availableToday.Concat(
+                                validSlots.Where(s => previousDaySlots.Contains(s.SlotTime))
+                            ).ToList();
+                        }
+                    }
+                    else
+                    {
+                        slotsForToday = validSlots;
                     }
 
                     // ✅ Distribuisci passaggi
@@ -115,6 +129,8 @@ namespace AirADV.Services
                     }
 
                     result.Add(dailySchedule);
+                    // Salva gli orari usati oggi per il confronto domani
+                    previousDaySlots = dailySchedule.TimeSlots.ToList();
                     totalDays++;
                 }
 
@@ -129,18 +145,6 @@ namespace AirADV.Services
             }
 
             return result;
-        }
-
-        /// <summary>
-        /// ✅ NUOVO: Ruota gli slot per evitare ripetizioni
-        /// </summary>
-        private List<DbcManager.TimeSlot> RotateSlots(List<DbcManager.TimeSlot> slots, int offset)
-        {
-            if (slots.Count == 0 || offset == 0)
-                return slots;
-
-            int actualOffset = offset % slots.Count;
-            return slots.Skip(actualOffset).Concat(slots.Take(actualOffset)).ToList();
         }
 
         /// <summary>

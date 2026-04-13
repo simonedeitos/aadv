@@ -294,6 +294,133 @@ namespace AirADV.Forms
             }
         }
 
+        private void btnAddCategory_Click(object sender, EventArgs e)
+        {
+            string title = LanguageManager.Get("CampaignWizard.AddCategoryTitle", "Nuova Categoria");
+            string prompt = LanguageManager.Get("CampaignWizard.AddCategoryPrompt", "Inserisci il nome della nuova categoria merceologica:");
+
+            using (var inputForm = new Form())
+            {
+                inputForm.Text = title;
+                inputForm.Size = new System.Drawing.Size(420, 160);
+                inputForm.StartPosition = FormStartPosition.CenterParent;
+                inputForm.FormBorderStyle = FormBorderStyle.FixedDialog;
+                inputForm.MaximizeBox = false;
+                inputForm.MinimizeBox = false;
+                inputForm.BackColor = System.Drawing.Color.FromArgb(45, 45, 48);
+
+                var lbl = new Label
+                {
+                    Text = prompt,
+                    Location = new System.Drawing.Point(12, 15),
+                    Size = new System.Drawing.Size(380, 20),
+                    ForeColor = System.Drawing.Color.White,
+                    Font = new System.Drawing.Font("Segoe UI", 9.5f)
+                };
+
+                var txt = new TextBox
+                {
+                    Location = new System.Drawing.Point(12, 42),
+                    Size = new System.Drawing.Size(380, 25),
+                    Font = new System.Drawing.Font("Segoe UI", 10f),
+                    BackColor = System.Drawing.Color.FromArgb(62, 62, 66),
+                    ForeColor = System.Drawing.Color.White
+                };
+
+                var btnOk = new Button
+                {
+                    Text = "OK",
+                    DialogResult = DialogResult.OK,
+                    Location = new System.Drawing.Point(220, 80),
+                    Size = new System.Drawing.Size(80, 28),
+                    BackColor = System.Drawing.Color.FromArgb(40, 167, 69),
+                    ForeColor = System.Drawing.Color.White,
+                    FlatStyle = FlatStyle.Flat
+                };
+                btnOk.FlatAppearance.BorderSize = 0;
+
+                var btnCancel = new Button
+                {
+                    Text = LanguageManager.Get("Common.Cancel", "Annulla"),
+                    DialogResult = DialogResult.Cancel,
+                    Location = new System.Drawing.Point(312, 80),
+                    Size = new System.Drawing.Size(80, 28),
+                    BackColor = System.Drawing.Color.FromArgb(108, 117, 125),
+                    ForeColor = System.Drawing.Color.White,
+                    FlatStyle = FlatStyle.Flat
+                };
+                btnCancel.FlatAppearance.BorderSize = 0;
+
+                inputForm.Controls.AddRange(new Control[] { lbl, txt, btnOk, btnCancel });
+                inputForm.AcceptButton = btnOk;
+                inputForm.CancelButton = btnCancel;
+
+                if (inputForm.ShowDialog(this) == DialogResult.OK)
+                {
+                    string categoryName = txt.Text.Trim();
+                    if (string.IsNullOrEmpty(categoryName))
+                    {
+                        MessageBox.Show(
+                            LanguageManager.Get("CampaignWizard.AddCategoryEmptyName", "Il nome della categoria non può essere vuoto!"),
+                            LanguageManager.Get("Common.Warning", "Attenzione"),
+                            MessageBoxButtons.OK,
+                            MessageBoxIcon.Warning
+                        );
+                        return;
+                    }
+
+                    try
+                    {
+                        var allCategories = DbcManager.Load<DbcManager.Category>("ADV_Categories.dbc");
+                        int maxID = allCategories.Any() ? allCategories.Max(c => c.ID) : 0;
+                        int maxNum = 0;
+                        foreach (var c in allCategories)
+                        {
+                            if (c.CategoryCode.StartsWith("CAT-") && int.TryParse(c.CategoryCode.Substring(4), out int n))
+                                if (n > maxNum) maxNum = n;
+                        }
+
+                        var newCategory = new DbcManager.Category
+                        {
+                            ID = maxID + 1,
+                            CategoryCode = $"CAT-{(maxNum + 1):D3}",
+                            CategoryName = categoryName,
+                            Color = "#808080",
+                            IsActive = true,
+                            CreatedDate = DateTime.Now
+                        };
+
+                        allCategories.Add(newCategory);
+                        DbcManager.Save("ADV_Categories.dbc", allCategories);
+
+                        LoadCategories();
+
+                        // Seleziona la nuova categoria
+                        for (int i = 0; i < cmbCategory.Items.Count; i++)
+                        {
+                            if (cmbCategory.Items[i] is DbcManager.Category cat && cat.ID == newCategory.ID)
+                            {
+                                cmbCategory.SelectedIndex = i;
+                                break;
+                            }
+                        }
+
+                        MessageBox.Show(
+                            string.Format(LanguageManager.Get("CampaignWizard.AddCategorySuccess", "✅ Categoria '{0}' creata!"), categoryName),
+                            LanguageManager.Get("Common.Success", "Successo"),
+                            MessageBoxButtons.OK,
+                            MessageBoxIcon.Information
+                        );
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"[CampaignWizard] Errore creazione categoria: {ex.Message}");
+                        MessageBox.Show(ex.Message, LanguageManager.Get("Common.Error", "Errore"), MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                }
+            }
+        }
+
         private void LoadClients()
         {
             var clients = DbcManager.Load<DbcManager.Client>("ADV_Clients.dbc")
@@ -1785,7 +1912,15 @@ namespace AirADV.Forms
                         MessageBoxIcon.Information
                     );
 
-                    ShowPDFPreview(savedCampaign, selectedSpots);
+                    if (MessageBox.Show(
+                            LanguageManager.Get("CampaignWizard.AskPDFReport", "Vuoi generare il report orari in formato PDF?"),
+                            LanguageManager.Get("CampaignWizard.AskPDFReportTitle", "Report Orari"),
+                            MessageBoxButtons.YesNo,
+                            MessageBoxIcon.Question
+                        ) == DialogResult.Yes)
+                    {
+                        ShowPDFPreview(savedCampaign, selectedSpots);
+                    }
 
                     this.DialogResult = DialogResult.OK;
                     this.Close();

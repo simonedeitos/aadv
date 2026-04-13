@@ -345,11 +345,13 @@ namespace AirADV.Forms
             var ctxSpots = new ContextMenuStrip();
             var mnuPlaySpot = new ToolStripMenuItem(LanguageManager.Get("ClientManagement.CtxPlaySpot", "▶ Riproduci"));
             var mnuOpenFolder = new ToolStripMenuItem(LanguageManager.Get("ClientManagement.CtxOpenFolder", "📁 Apri cartella file"));
+            var mnuEditSpot = new ToolStripMenuItem(LanguageManager.Get("ClientManagement.MnuEditSpot", "✏️ Editing"));
             var mnuDeleteSpot = new ToolStripMenuItem(LanguageManager.Get("ClientManagement.CtxDeleteSpot", "🗑️ Elimina Spot"));
             mnuPlaySpot.Click += (s, e) => btnPlaySpot_Click(s, e);
             mnuOpenFolder.Click += MnuOpenSpotFolder_Click;
+            mnuEditSpot.Click += MnuEditSpot_Click;
             mnuDeleteSpot.Click += (s, e) => btnDeleteSpot_Click(s, e);
-            ctxSpots.Items.AddRange(new ToolStripItem[] { mnuPlaySpot, mnuOpenFolder, new ToolStripSeparator(), mnuDeleteSpot });
+            ctxSpots.Items.AddRange(new ToolStripItem[] { mnuPlaySpot, mnuOpenFolder, mnuEditSpot, new ToolStripSeparator(), mnuDeleteSpot });
             ctxSpots.Opening += (s, e) => e.Cancel = dgvSpots.SelectedRows.Count == 0;
             dgvSpots.ContextMenuStrip = ctxSpots;
         }
@@ -904,9 +906,6 @@ namespace AirADV.Forms
                 );
 
                 LoadClients();
-
-                // ✅ Dopo salvataggio, naviga al tab Spot
-                tabClientDetails.SelectedTab = tabSpots;
             }
             catch (Exception ex)
             {
@@ -1012,12 +1011,39 @@ namespace AirADV.Forms
                     DbcManager.Save("ADV_Spots.dbc", allSpots);
                     LoadClientSpots(_selectedClient.ID);
 
-                    // ✅ Auto-seleziona primo spot per attivare l'anteprima
+                    // ✅ Auto-seleziona primo spot e forza caricamento player
                     if (dgvSpots.Rows.Count > 0)
                     {
                         dgvSpots.ClearSelection();
                         dgvSpots.Rows[0].Selected = true;
                         dgvSpots.CurrentCell = dgvSpots.Rows[0].Cells[0];
+
+                        // Forza il caricamento nel player senza aspettare l'evento SelectionChanged
+                        var firstSpot = dgvSpots.Rows[0].Tag as DbcManager.Spot;
+                        if (firstSpot != null && !string.IsNullOrEmpty(firstSpot.FilePath) && File.Exists(firstSpot.FilePath))
+                        {
+                            try
+                            {
+                                if (IsVideoFile(firstSpot.FilePath))
+                                {
+                                    ShowVideoPreview(firstSpot.FilePath, firstSpot.SpotTitle);
+                                }
+                                else
+                                {
+                                    HideVideoPreview();
+                                    if (_audioPlayer != null && _audioPlayer.IsPlaying)
+                                        _audioPlayer.Stop();
+                                    _audioPlayer.Load(firstSpot.FilePath);
+                                    lblPlayerStatus.Text = $"🎵 {firstSpot.SpotTitle}";
+                                    btnPlaySpot.Enabled = true;
+                                    btnPlaySpot.Text = "▶";
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                Console.WriteLine($"[ClientManagement] Errore caricamento player dopo import: {ex.Message}");
+                            }
+                        }
                     }
 
                     MessageBox.Show(
@@ -1077,6 +1103,40 @@ namespace AirADV.Forms
             catch (Exception ex)
             {
                 Console.WriteLine($"[ClientManagement] Errore apertura cartella: {ex.Message}");
+            }
+        }
+
+        private void MnuEditSpot_Click(object sender, EventArgs e)
+        {
+            if (dgvSpots.SelectedRows.Count == 0) return;
+
+            var spot = dgvSpots.SelectedRows[0].Tag as DbcManager.Spot;
+            if (spot == null || string.IsNullOrEmpty(spot.FilePath) || !File.Exists(spot.FilePath))
+            {
+                MessageBox.Show(
+                    LanguageManager.Get("AudioEditor.NoFile", "Nessun file da modificare!"),
+                    LanguageManager.Get("Common.Warning", "Attenzione"),
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning
+                );
+                return;
+            }
+
+            try
+            {
+                StopAllPlayback();
+                using (var editorForm = new AudioEditorForm(spot.FilePath))
+                {
+                    editorForm.ShowDialog(this);
+                }
+                // Ricarica spot dopo eventuali modifiche
+                if (_selectedClient != null)
+                    LoadClientSpots(_selectedClient.ID);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ClientManagement] Errore apertura Audio Editor: {ex.Message}");
+                MessageBox.Show(ex.Message, LanguageManager.Get("Common.Error", "Errore"), MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
