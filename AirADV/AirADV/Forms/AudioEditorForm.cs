@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using AirADV.Services;
@@ -46,6 +48,10 @@ namespace AirADV.Forms
         private readonly bool _isVideo;
         private float _gainDb = 0f;
 
+        // ── Durata e tracking modifiche per ffmpeg ────────────────────
+        private double _originalDurationSec = 0;
+        private readonly List<(double startSec, double endSec)> _deletedOriginalRanges = new List<(double, double)>();
+
         // ── Selezione waveform (indici campioni) ──────────────────────
         private int _selStart = -1;
         private int _selEnd = -1;
@@ -55,10 +61,12 @@ namespace AirADV.Forms
         // ── Cursor di playback ────────────────────────────────────────
         private System.Windows.Forms.Timer _playbackTimer;
         private float _playbackPosition = 0f; // 0..1
+        private int _videoSyncTick = 0;
 
         // ── Controlli UI ─────────────────────────────────────────────
         private Panel pnlToolbar;
         private PictureBox picWaveform;
+        private Panel pnlCenter;
         private Panel pnlVideo;
         private Panel pnlControls;
         private Label lblGain;
@@ -75,6 +83,9 @@ namespace AirADV.Forms
 
         private static readonly string[] VIDEO_EXTENSIONS =
             { ".mp4", ".avi", ".mkv", ".mov", ".wmv", ".flv", ".webm", ".m4v", ".mpg", ".mpeg" };
+
+        private const int FfmpegTimeoutMs = 120000;
+        private const int VlcReleaseDelayMs = 200;
 
         public AudioEditorForm(string filePath)
         {
@@ -211,7 +222,9 @@ namespace AirADV.Forms
             };
             pnlToolbar.Controls.Add(lblFileName);
 
-            // ── Area centrale: waveform + eventuale preview video ─────
+            // ── Area centrale: pnlCenter contiene waveform + eventuale preview video ──
+            pnlCenter = new Panel { Dock = DockStyle.Fill };
+
             picWaveform = new PictureBox
             {
                 Dock = DockStyle.Fill,
@@ -222,7 +235,7 @@ namespace AirADV.Forms
             picWaveform.MouseDown += PicWaveform_MouseDown;
             picWaveform.MouseMove += PicWaveform_MouseMove;
             picWaveform.MouseUp += PicWaveform_MouseUp;
-            this.Controls.Add(picWaveform);
+            pnlCenter.Controls.Add(picWaveform);
 
             if (_isVideo)
             {
@@ -232,9 +245,10 @@ namespace AirADV.Forms
                     Height = 200,
                     BackColor = Color.Black
                 };
-                this.Controls.Add(pnlVideo);
+                pnlCenter.Controls.Add(pnlVideo);
             }
 
+            this.Controls.Add(pnlCenter);
             this.Controls.Add(pnlToolbar);
             this.Controls.Add(pnlControls);
 
@@ -472,6 +486,9 @@ namespace AirADV.Forms
                     }
                 }
 
+                if (_samples != null && _sampleRate > 0 && _channels > 0)
+                    _originalDurationSec = (double)_samples.Length / _channels / _sampleRate;
+
                 if (lblStatus != null && _samples != null)
                     lblStatus.Text = $"{Path.GetFileName(_filePath)} | {_sampleRate} Hz | {_channels}ch | {(_samples.Length / _channels / _sampleRate):F1}s";
             }
@@ -639,7 +656,20 @@ namespace AirADV.Forms
 
         private void PicWaveform_MouseUp(object sender, MouseEventArgs e)
         {
+            bool wasDrag = Math.Abs(e.X - _dragStartX) >= 5;
             _isDragging = false;
+
+            // Se è un click singolo (non un drag), fai seek del VLC alla posizione cliccata
+            if (!wasDrag && _isVideo && _vlcPlayer != null && _sampleRate > 0 && _channels > 0 && _samples != null)
+            {
+                try
+                {
+                    int sampleIdx = (int)((float)e.X / picWaveform.Width * _samples.Length);
+                    long audioMs = (long)((double)sampleIdx / (_sampleRate * _channels) * 1000);
+                    _vlcPlayer.Time = audioMs;
+                }
+                catch (Exception ex) { Console.WriteLine($"[AudioEditor] VLC seek on click: {ex.Message}"); }
+            }
         }
 
         // ═══════════════════════════════════════════════════════════
@@ -688,6 +718,22 @@ namespace AirADV.Forms
                 long len = _audioReader.Length;
                 _playbackPosition = len > 0 ? (float)pos / len : 0f;
                 picWaveform?.Invalidate();
+
+                // Sincronizza VLC con la posizione audio ogni ~500ms (10 tick × 50ms)
+                if (_isVideo && _vlcPlayer != null)
+                {
+                    _videoSyncTick++;
+                    if (_videoSyncTick >= 10)
+                    {
+                        _videoSyncTick = 0;
+                        try
+                        {
+                            long audioMs = (long)_audioReader.CurrentTime.TotalMilliseconds;
+                            _vlcPlayer.Time = audioMs;
+                        }
+                        catch { }
+                    }
+                }
             }
             else
             {
@@ -726,8 +772,22 @@ namespace AirADV.Forms
                 };
                 _waveOut.Play();
                 _isPlaying = true;
+                _videoSyncTick = 0;
                 _playbackTimer.Start();
                 lblStatus.Text = "▶ " + Path.GetFileName(_filePath);
+
+                // Avvia e sincronizza il player VLC con l'audio
+                if (_isVideo && _vlcPlayer != null)
+                {
+                    try
+                    {
+                        long audioMs = (long)_audioReader.CurrentTime.TotalMilliseconds;
+                        _vlcPlayer.Time = audioMs;
+                        if (!_vlcPlayer.IsPlaying)
+                            _vlcPlayer.Play();
+                    }
+                    catch (Exception vlcEx) { Console.WriteLine($"[AudioEditor] VLC play sync: {vlcEx.Message}"); }
+                }
             }
             catch (Exception ex)
             {
@@ -742,6 +802,13 @@ namespace AirADV.Forms
                 _waveOut.Pause();
                 _isPlaying = false;
                 _playbackTimer.Stop();
+
+                // Metti in pausa anche il player VLC
+                if (_isVideo && _vlcPlayer != null)
+                {
+                    try { if (_vlcPlayer.IsPlaying) _vlcPlayer.SetPause(true); }
+                    catch (Exception ex) { Console.WriteLine($"[AudioEditor] VLC pause sync: {ex.Message}"); }
+                }
             }
         }
 
@@ -772,6 +839,30 @@ namespace AirADV.Forms
                 picWaveform?.Invalidate();
             }
             catch { }
+
+            // Ferma e resetta anche il player VLC
+            if (_isVideo && _vlcPlayer != null)
+            {
+                try
+                {
+                    _vlcPlayer.Stop();
+                    // Ricarica il media per resettare la posizione al primo frame
+                    if (_libVLC != null && _filePath != null)
+                    {
+                        var media = new Media(_libVLC, new Uri(_filePath));
+                        _vlcPlayer.Media = media;
+                        EventHandler<EventArgs> onPlaying = null;
+                        onPlaying = (s, ev) =>
+                        {
+                            _vlcPlayer.Playing -= onPlaying;
+                            _vlcPlayer.SetPause(true);
+                        };
+                        _vlcPlayer.Playing += onPlaying;
+                        _vlcPlayer.Play();
+                    }
+                }
+                catch (Exception ex) { Console.WriteLine($"[AudioEditor] VLC stop sync: {ex.Message}"); }
+            }
         }
 
         // ═══════════════════════════════════════════════════════════
@@ -792,7 +883,17 @@ namespace AirADV.Forms
 
             StopAudio();
 
-            // Rimuovi campioni selezionati
+            // Mappa gli indici correnti nei campioni modificati a tempi nel file originale
+            long origStartSample = ComputeOriginalSample(_selStart);
+            long origEndSample = ComputeOriginalSample(_selEnd);
+            if (_sampleRate > 0 && _channels > 0)
+            {
+                double origStartSec = origStartSample / (double)(_sampleRate * _channels);
+                double origEndSec = origEndSample / (double)(_sampleRate * _channels);
+                _deletedOriginalRanges.Add((origStartSec, origEndSec));
+            }
+
+            // Rimuovi campioni selezionati per aggiornare la waveform visiva
             var before = _samples.Take(_selStart).ToArray();
             var after = _samples.Skip(_selEnd).ToArray();
             _samples = before.Concat(after).ToArray();
@@ -832,7 +933,7 @@ namespace AirADV.Forms
         }
 
         // ═══════════════════════════════════════════════════════════
-        // SAVE (editing distruttivo - sovrascrittura file)
+        // SAVE (con ffmpeg per preservare il formato originale)
         // ═══════════════════════════════════════════════════════════
         private void BtnSave_Click(object sender, EventArgs e)
         {
@@ -849,26 +950,41 @@ namespace AirADV.Forms
             {
                 StopAudio();
 
-                float gainLinear = (float)Math.Pow(10.0, _gainDb / 20.0);
+                string ext = Path.GetExtension(_filePath).ToLowerInvariant();
+                bool isWav = ext == ".wav";
+                bool hasGain = _gainDb != 0;
+                bool hasDeletions = _deletedOriginalRanges.Count > 0;
+                bool hasChanges = hasGain || hasDeletions;
 
-                // Applica gain ai samples prima di salvare
-                float[] outputSamples = _samples;
-                if (_gainDb != 0)
+                string ffmpegPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ffmpeg.exe");
+                bool ffmpegAvailable = File.Exists(ffmpegPath);
+
+                if (_isVideo)
                 {
-                    outputSamples = new float[_samples.Length];
-                    for (int i = 0; i < _samples.Length; i++)
-                        outputSamples[i] = Math.Max(-1f, Math.Min(1f, _samples[i] * gainLinear));
+                    if (!ffmpegAvailable)
+                    {
+                        MessageBox.Show(
+                            LanguageManager.Get("AudioEditor.FfmpegNotFound", "❌ ffmpeg.exe non trovato nella cartella dell'applicazione!\nImpossibile salvare file video."),
+                            LanguageManager.Get("Common.Error", "Errore"),
+                            MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        return;
+                    }
+                    SaveWithFfmpeg(ffmpegPath);
+                }
+                else if (!isWav && hasChanges && ffmpegAvailable)
+                {
+                    // File audio non-WAV: usa ffmpeg per preservare il formato originale
+                    SaveWithFfmpeg(ffmpegPath);
+                }
+                else
+                {
+                    // File WAV (o audio senza ffmpeg): approccio diretto con campioni
+                    SaveAsWav();
                 }
 
-                // Scrivi tramite file temporaneo e sostituisci l'originale
-                string tempPath = _filePath + ".tmp";
-                WriteSamplesToWav(tempPath, outputSamples);
-                File.Delete(_filePath);
-                File.Move(tempPath, _filePath);
-
-                _samples = outputSamples;
                 _gainDb = 0;
                 trkGain.Value = 0;
+                _deletedOriginalRanges.Clear();
 
                 MessageBox.Show(
                     LanguageManager.Get("AudioEditor.SaveSuccess", "✅ File salvato con successo!"),
@@ -888,6 +1004,198 @@ namespace AirADV.Forms
             }
         }
 
+        /// <summary>Salva usando ffmpeg per preservare il formato originale (audio e video).</summary>
+        private void SaveWithFfmpeg(string ffmpegPath)
+        {
+            // Rilascia VLC prima di accedere al file in scrittura
+            ReleaseVlcResources();
+
+            string ext = Path.GetExtension(_filePath).ToLowerInvariant();
+            string tempFile = Path.Combine(
+                Path.GetDirectoryName(_filePath) ?? "",
+                Path.GetFileNameWithoutExtension(_filePath) + "_tmp" + ext);
+
+            try
+            {
+                string arguments = BuildFfmpegArguments(tempFile);
+                Console.WriteLine($"[AudioEditor] 🎬 ffmpeg: {arguments}");
+
+                string stderr;
+                int exitCode;
+                using (var process = new Process
+                {
+                    StartInfo = new ProcessStartInfo
+                    {
+                        FileName = ffmpegPath,
+                        Arguments = arguments,
+                        UseShellExecute = false,
+                        CreateNoWindow = true,
+                        RedirectStandardOutput = false,
+                        RedirectStandardError = true
+                    }
+                })
+                {
+                    process.Start();
+                    stderr = process.StandardError.ReadToEnd();
+                    bool exited = process.WaitForExit(FfmpegTimeoutMs);
+                    exitCode = exited ? process.ExitCode : -1;
+                }
+
+                Console.WriteLine($"[AudioEditor] ffmpeg output: {stderr}");
+
+                if (exitCode == 0 && File.Exists(tempFile))
+                {
+                    File.Delete(_filePath);
+                    File.Move(tempFile, _filePath);
+                    tempFile = null;
+                }
+                else
+                {
+                    throw new Exception($"{LanguageManager.Get("AudioEditor.FfmpegFailed", "ffmpeg ha fallito con codice di uscita")} {exitCode}. Log:\n{stderr?.Split('\n').TakeLast(5).Aggregate("", (a, b) => a + "\n" + b)}");
+                }
+            }
+            finally
+            {
+                if (tempFile != null && File.Exists(tempFile))
+                    File.Delete(tempFile);
+            }
+        }
+
+        /// <summary>Costruisce gli argomenti ffmpeg per applicare gain e/o eliminazioni.</summary>
+        private string BuildFfmpegArguments(string tempFile)
+        {
+            bool hasGain = _gainDb != 0;
+            bool hasDeletions = _deletedOriginalRanges.Count > 0;
+
+            if (hasDeletions)
+            {
+                return BuildFfmpegArgumentsWithDeletions(tempFile);
+            }
+            else if (hasGain)
+            {
+                string volumeFilter = $"volume={_gainDb.ToString(System.Globalization.CultureInfo.InvariantCulture)}dB";
+                if (_isVideo)
+                    return $"-i \"{_filePath}\" -c:v copy -af \"{volumeFilter}\" -y \"{tempFile}\"";
+                else
+                    return $"-i \"{_filePath}\" -af \"{volumeFilter}\" -y \"{tempFile}\"";
+            }
+            else
+            {
+                // Nessuna modifica, copia senza re-encoding
+                return $"-i \"{_filePath}\" -c copy -y \"{tempFile}\"";
+            }
+        }
+
+        /// <summary>Costruisce gli argomenti ffmpeg usando filtri trim/concat per le eliminazioni.</summary>
+        private string BuildFfmpegArgumentsWithDeletions(string tempFile)
+        {
+            // Calcola i segmenti da mantenere (inverso dei range eliminati)
+            var sortedDels = _deletedOriginalRanges.OrderBy(r => r.startSec).ToList();
+            var keepSegs = new List<(double start, double end)>();
+            double prevEnd = 0;
+            foreach (var (startSec, endSec) in sortedDels)
+            {
+                if (startSec > prevEnd + 0.001)
+                    keepSegs.Add((prevEnd, startSec));
+                prevEnd = endSec;
+            }
+            if (_originalDurationSec > prevEnd + 0.001)
+                keepSegs.Add((prevEnd, _originalDurationSec));
+
+            if (keepSegs.Count == 0)
+                throw new InvalidOperationException(LanguageManager.Get("AudioEditor.AllPortionsDeleted", "Tutte le porzioni del file sono state eliminate."));
+
+            int n = keepSegs.Count;
+            string gainSuffix = _gainDb != 0 ? $",volume={_gainDb.ToString(System.Globalization.CultureInfo.InvariantCulture)}dB" : "";
+            var sb = new StringBuilder();
+
+            if (_isVideo)
+            {
+                sb.Append($"-i \"{_filePath}\" -filter_complex \"");
+                for (int i = 0; i < n; i++)
+                {
+                    var (s, end) = keepSegs[i];
+                    sb.Append($"[0:v]trim={s.ToString("F3", System.Globalization.CultureInfo.InvariantCulture)}:{end.ToString("F3", System.Globalization.CultureInfo.InvariantCulture)},setpts=PTS-STARTPTS[v{i}];");
+                    sb.Append($"[0:a]atrim={s.ToString("F3", System.Globalization.CultureInfo.InvariantCulture)}:{end.ToString("F3", System.Globalization.CultureInfo.InvariantCulture)},asetpts=PTS-STARTPTS{gainSuffix}[a{i}];");
+                }
+                for (int i = 0; i < n; i++) sb.Append($"[v{i}][a{i}]");
+                sb.Append($"concat=n={n}:v=1:a=1[vout][aout]\" -map \"[vout]\" -map \"[aout]\" -y \"{tempFile}\"");
+            }
+            else
+            {
+                sb.Append($"-i \"{_filePath}\" -filter_complex \"");
+                for (int i = 0; i < n; i++)
+                {
+                    var (s, end) = keepSegs[i];
+                    sb.Append($"[0:a]atrim={s.ToString("F3", System.Globalization.CultureInfo.InvariantCulture)}:{end.ToString("F3", System.Globalization.CultureInfo.InvariantCulture)},asetpts=PTS-STARTPTS{gainSuffix}[a{i}];");
+                }
+                for (int i = 0; i < n; i++) sb.Append($"[a{i}]");
+                sb.Append($"concat=n={n}:v=0:a=1[aout]\" -map \"[aout]\" -vn -y \"{tempFile}\"");
+            }
+
+            return sb.ToString();
+        }
+
+        /// <summary>Salva come WAV diretto (solo per file WAV audio).</summary>
+        private void SaveAsWav()
+        {
+            float gainLinear = (float)Math.Pow(10.0, _gainDb / 20.0);
+            float[] outputSamples = _samples;
+            if (_gainDb != 0)
+            {
+                outputSamples = new float[_samples.Length];
+                for (int i = 0; i < _samples.Length; i++)
+                    outputSamples[i] = Math.Max(-1f, Math.Min(1f, _samples[i] * gainLinear));
+            }
+
+            string tempPath = _filePath + ".tmp";
+            WriteSamplesToWav(tempPath, outputSamples);
+            File.Delete(_filePath);
+            File.Move(tempPath, _filePath);
+            _samples = outputSamples;
+        }
+
+        /// <summary>Mappa un indice campione nell'array modificato al campione corrispondente nel file originale.</summary>
+        private long ComputeOriginalSample(long modifiedSampleIdx)
+        {
+            long offset = 0;
+            var sorted = _deletedOriginalRanges.OrderBy(r => r.startSec).ToList();
+            foreach (var (startSec, endSec) in sorted)
+            {
+                if (_sampleRate <= 0 || _channels <= 0) break;
+                long delStartOrig = (long)(startSec * _sampleRate * _channels);
+                long delEndOrig = (long)(endSec * _sampleRate * _channels);
+                long delCount = delEndOrig - delStartOrig;
+                long delStartMod = delStartOrig - offset;
+                if (modifiedSampleIdx < delStartMod)
+                    break;
+                offset += delCount;
+            }
+            return modifiedSampleIdx + offset;
+        }
+
+        /// <summary>Ferma e rilascia completamente le risorse VLC (necessario prima del salvataggio ffmpeg).</summary>
+        private void ReleaseVlcResources()
+        {
+            try { _vlcPlayer?.Stop(); } catch { }
+            System.Threading.Thread.Sleep(VlcReleaseDelayMs);
+            try
+            {
+                if (_videoView != null)
+                {
+                    pnlVideo?.Controls.Remove(_videoView);
+                    _videoView.MediaPlayer = null;
+                    _videoView.Dispose();
+                    _videoView = null;
+                }
+            }
+            catch (Exception ex) { Console.WriteLine($"[AudioEditor] Dispose VideoView: {ex.Message}"); }
+            try { _vlcPlayer?.Dispose(); _vlcPlayer = null; }
+            catch (Exception ex) { Console.WriteLine($"[AudioEditor] Dispose MediaPlayer: {ex.Message}"); }
+            try { _libVLC?.Dispose(); _libVLC = null; }
+            catch (Exception ex) { Console.WriteLine($"[AudioEditor] Dispose LibVLC: {ex.Message}"); }
+        }
+
         private void WriteSamplesToWav(string outputPath, float[] samples)
         {
             var format = WaveFormat.CreateIeeeFloatWaveFormat(_sampleRate, _channels);
@@ -904,34 +1212,7 @@ namespace AirADV.Forms
         {
             StopAudio();
             _waveformBitmap?.Dispose();
-            try
-            {
-                _vlcPlayer?.Stop();
-            }
-            catch (Exception ex) { Console.WriteLine($"[AudioEditor] Stop VLC: {ex.Message}"); }
-            try
-            {
-                if (_videoView != null)
-                {
-                    pnlVideo?.Controls.Remove(_videoView);
-                    _videoView.MediaPlayer = null;
-                    _videoView.Dispose();
-                    _videoView = null;
-                }
-            }
-            catch (Exception ex) { Console.WriteLine($"[AudioEditor] Dispose VideoView: {ex.Message}"); }
-            try
-            {
-                _vlcPlayer?.Dispose();
-                _vlcPlayer = null;
-            }
-            catch (Exception ex) { Console.WriteLine($"[AudioEditor] Dispose MediaPlayer: {ex.Message}"); }
-            try
-            {
-                _libVLC?.Dispose();
-                _libVLC = null;
-            }
-            catch (Exception ex) { Console.WriteLine($"[AudioEditor] Dispose LibVLC: {ex.Message}"); }
+            ReleaseVlcResources();
         }
     }
 }
