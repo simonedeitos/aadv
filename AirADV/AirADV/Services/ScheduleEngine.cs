@@ -78,23 +78,29 @@ namespace AirADV.Services
                         IsModified = false
                     };
 
-                    // ✅ Evita ripetizioni: escludi gli slot usati il giorno precedente
+                    // ✅ Evita ripetizioni: escludi gli slot usati il giorno precedente.
+                    // Determina la lista primaria (non ripetuti) e, se necessario, la lista secondaria
+                    // (slot da ieri da usare solo come completamento).
                     List<DbcManager.TimeSlot> slotsForToday;
+                    List<DbcManager.TimeSlot>? repeatedSlots = null; // solo nel caso di fallback
+                    int needed = Math.Min(campaign.DailyPasses, validSlots.Count);
 
                     if (avoidRepetition && previousDaySlots.Count > 0)
                     {
                         var availableToday = validSlots.Where(s => !previousDaySlots.Contains(s.SlotTime)).ToList();
 
-                        if (availableToday.Count >= campaign.DailyPasses)
+                        if (availableToday.Count >= needed)
                         {
+                            // Ci sono abbastanza slot non usati ieri: usa solo quelli
                             slotsForToday = availableToday;
                         }
                         else
                         {
-                            // Fallback: usa quelli disponibili + riempi con quelli precedenti
-                            slotsForToday = availableToday.Concat(
-                                validSlots.Where(s => previousDaySlots.Contains(s.SlotTime))
-                            ).ToList();
+                            // Fallback: non ci sono abbastanza slot non ripetuti.
+                            // Usa TUTTI quelli non ripetuti (slotsForToday) come priorità massima
+                            // e conserva quelli ripetuti separatamente per il completamento.
+                            slotsForToday = availableToday;
+                            repeatedSlots = validSlots.Where(s => previousDaySlots.Contains(s.SlotTime)).ToList();
                         }
                     }
                     else
@@ -103,7 +109,51 @@ namespace AirADV.Services
                     }
 
                     // ✅ Distribuisci passaggi
-                    if (distributePasses)
+                    if (repeatedSlots != null)
+                    {
+                        // Caso fallback avoidRepetition: distribuisci prima i non-ripetuti,
+                        // poi completa con i ripetuti scegliendo quelli più distanti dagli orari già assegnati.
+                        List<string> primary;
+                        if (distributePasses && slotsForToday.Count > 0)
+                        {
+                            primary = campaign.DistributionMode == "AUDIENCE"
+                                ? DistributeByAudience(slotsForToday, slotsForToday.Count)
+                                : DistributeBalanced(slotsForToday, slotsForToday.Count);
+                        }
+                        else
+                        {
+                            primary = slotsForToday.Select(s => s.SlotTime).ToList();
+                        }
+
+                        int remainingNeeded = needed - primary.Count;
+                        if (remainingNeeded > 0)
+                        {
+                            // Scegli gli slot ripetuti più distanti dagli orari già assegnati oggi
+                            var primaryTimes = primary.Select(t => TimeSpan.Parse(t)).ToList();
+                            var secondary = repeatedSlots
+                                .OrderByDescending(s =>
+                                {
+                                    var st = TimeSpan.Parse(s.SlotTime);
+                                    return primaryTimes.Count > 0
+                                        ? primaryTimes.Min(pt => Math.Abs((st - pt).TotalMinutes))
+                                        : 0.0;
+                                })
+                                .Take(remainingNeeded)
+                                .Select(s => s.SlotTime)
+                                .ToList();
+
+                            dailySchedule.TimeSlots = primary.Concat(secondary)
+                                .OrderBy(t => TimeSpan.Parse(t))
+                                .ToList();
+                        }
+                        else
+                        {
+                            dailySchedule.TimeSlots = primary.OrderBy(t => TimeSpan.Parse(t)).ToList();
+                        }
+
+                        Console.WriteLine($"[ScheduleEngine] Fallback avoidRepetition: {primary.Count} slot non-ripetuti + {needed - primary.Count} ripetuti (più distanti)");
+                    }
+                    else if (distributePasses)
                     {
                         // Distribuzione uniforme lungo tutta la giornata
                         if (campaign.DistributionMode == "BALANCED")
@@ -215,24 +265,15 @@ namespace AirADV.Services
             }
             else
             {
-                // ✅ ALGORITMO MIGLIORATO: Distribuzione uniforme senza sovrapposizioni
+                // ✅ ALGORITMO BUCKET-CENTER: seleziona il centro di ciascun bucket equidistante
+                // Divide i slot in effectivePasses bucket di dimensione uguale e prende il centro di ognuno.
+                // step >= 1 garantisce bucket distinti → nessuna collisione, nessun raggruppamento.
                 double step = (double)slots.Count / effectivePasses;
-                var usedIndices = new HashSet<int>();
 
                 for (int i = 0; i < effectivePasses; i++)
                 {
-                    int index = (int)Math.Round(i * step);
-
-                    // Evita duplicati
-                    while (usedIndices.Contains(index) && index < slots.Count - 1)
-                    {
-                        index++;
-                    }
-
-                    if (index >= slots.Count)
-                        index = slots.Count - 1;
-
-                    usedIndices.Add(index);
+                    int index = (int)(step * i + step / 2.0);
+                    index = Math.Min(index, slots.Count - 1);
                     result.Add(slots[index].SlotTime);
                 }
 
