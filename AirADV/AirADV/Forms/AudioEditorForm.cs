@@ -63,11 +63,16 @@ namespace AirADV.Forms
         private float _playbackPosition = 0f; // 0..1
         private int _videoSyncTick = 0;
 
+        // ── VU Meter ─────────────────────────────────────────────────
+        private float _vuLevelL = 0f;
+        private float _vuLevelR = 0f;
+
         // ── Controlli UI ─────────────────────────────────────────────
         private Panel pnlToolbar;
         private PictureBox picWaveform;
         private Panel pnlCenter;
         private Panel pnlVideo;
+        private Panel pnlVuMeters;
         private Panel pnlControls;
         private Label lblGain;
         private TrackBar trkGain;
@@ -86,6 +91,7 @@ namespace AirADV.Forms
 
         private const int FfmpegTimeoutMs = 120000;
         private const int VlcReleaseDelayMs = 200;
+        private const int VuMeterWindowSamples = 1024;
 
         public AudioEditorForm(string filePath)
         {
@@ -228,7 +234,7 @@ namespace AirADV.Forms
             picWaveform = new PictureBox
             {
                 Dock = DockStyle.Fill,
-                BackColor = Color.FromArgb(10, 10, 10),
+                BackColor = Color.FromArgb(60, 60, 65),
                 Cursor = Cursors.Cross
             };
             picWaveform.Paint += PicWaveform_Paint;
@@ -245,6 +251,17 @@ namespace AirADV.Forms
                     Height = 200,
                     BackColor = Color.Black
                 };
+
+                // VU Meter verticali (L e R) a destra del video
+                pnlVuMeters = new Panel
+                {
+                    Dock = DockStyle.Right,
+                    Width = 60,
+                    BackColor = Color.FromArgb(30, 30, 30)
+                };
+                pnlVuMeters.Paint += PnlVuMeters_Paint;
+                pnlVideo.Controls.Add(pnlVuMeters);
+
                 pnlCenter.Controls.Add(pnlVideo);
             }
 
@@ -502,7 +519,7 @@ namespace AirADV.Forms
         {
             try
             {
-                Core.Initialize();
+                try { Core.Initialize(); } catch (Exception initEx) { Console.WriteLine($"[AudioEditor] Core.Initialize: {initEx.Message}"); }
                 _libVLC = new LibVLC("--no-video-title-show");
                 _vlcPlayer = new LibVLCSharp.Shared.MediaPlayer(_libVLC);
 
@@ -559,7 +576,7 @@ namespace AirADV.Forms
 
             using (Graphics g = Graphics.FromImage(_waveformBitmap))
             {
-                g.Clear(Color.FromArgb(10, 10, 10));
+                g.Clear(Color.FromArgb(60, 60, 65));
                 g.SmoothingMode = SmoothingMode.HighQuality;
                 int midY = height / 2;
 
@@ -601,7 +618,7 @@ namespace AirADV.Forms
             if (_waveformBitmap != null)
                 g.DrawImage(_waveformBitmap, 0, 0);
             else
-                g.Clear(Color.FromArgb(10, 10, 10));
+                g.Clear(Color.FromArgb(60, 60, 65));
 
             // Overlay selezione (rosso semi-trasparente)
             if (_selStart >= 0 && _selEnd > _selStart && _samples != null && _samples.Length > 0)
@@ -629,6 +646,12 @@ namespace AirADV.Forms
         private void PicWaveform_MouseDown(object sender, MouseEventArgs e)
         {
             if (_samples == null || _samples.Length == 0) return;
+            // Durante la riproduzione, non iniziare il drag di selezione — solo registra la posizione
+            if (_isPlaying)
+            {
+                _dragStartX = e.X;
+                return;
+            }
             _isDragging = true;
             _dragStartX = e.X;
             _selStart = (int)((float)e.X / picWaveform.Width * _samples.Length);
@@ -659,7 +682,29 @@ namespace AirADV.Forms
             bool wasDrag = Math.Abs(e.X - _dragStartX) >= 5;
             _isDragging = false;
 
-            // Se è un click singolo (non un drag), fai seek del VLC alla posizione cliccata
+            // Se in riproduzione e click singolo (non drag), fai seek dell'audio alla posizione cliccata
+            if (_isPlaying && !wasDrag && _audioReader != null && _samples != null && _samples.Length > 0)
+            {
+                try
+                {
+                    long newPos = (long)((float)e.X / picWaveform.Width * _audioReader.Length);
+                    newPos = Math.Max(0, Math.Min(_audioReader.Length - 1, newPos));
+                    _audioReader.Position = newPos;
+                    _playbackPosition = (float)e.X / picWaveform.Width;
+                    picWaveform.Invalidate();
+
+                    if (_isVideo && _vlcPlayer != null && _sampleRate > 0 && _channels > 0)
+                    {
+                        int sampleIdx = (int)((float)e.X / picWaveform.Width * _samples.Length);
+                        long audioMs = (long)((double)sampleIdx / (_sampleRate * _channels) * 1000);
+                        try { _vlcPlayer.Time = audioMs; } catch { }
+                    }
+                }
+                catch (Exception ex) { Console.WriteLine($"[AudioEditor] Seek on click during play: {ex.Message}"); }
+                return;
+            }
+
+            // Se è un click singolo (non un drag) e non in riproduzione, fai seek del VLC alla posizione cliccata
             if (!wasDrag && _isVideo && _vlcPlayer != null && _sampleRate > 0 && _channels > 0 && _samples != null)
             {
                 try
@@ -669,6 +714,75 @@ namespace AirADV.Forms
                     _vlcPlayer.Time = audioMs;
                 }
                 catch (Exception ex) { Console.WriteLine($"[AudioEditor] VLC seek on click: {ex.Message}"); }
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        // VU METER
+        // ═══════════════════════════════════════════════════════════
+        private void PnlVuMeters_Paint(object sender, PaintEventArgs e)
+        {
+            var g = e.Graphics;
+            int w = pnlVuMeters.Width;
+            int h = pnlVuMeters.Height;
+
+            g.Clear(Color.FromArgb(30, 30, 30));
+
+            int labelH = 20;
+            int barAreaH = h - labelH - 4;
+            int barW = (w - 18) / 2;
+
+            // Barra L (sinistra)
+            DrawVuBar(g, 4, labelH, barW, barAreaH, _vuLevelL);
+            // Barra R (destra)
+            DrawVuBar(g, 4 + barW + 10, labelH, barW, barAreaH, _vuLevelR);
+
+            // Etichette
+            using (var font = new Font("Segoe UI", 7.5f, FontStyle.Bold))
+            using (var brush = new SolidBrush(Color.LightGray))
+            {
+                g.DrawString("L", font, brush, 4 + barW / 2 - 4, 4);
+                g.DrawString("R", font, brush, 4 + barW + 10 + barW / 2 - 4, 4);
+            }
+        }
+
+        private void DrawVuBar(Graphics g, int x, int y, int w, int h, float level)
+        {
+            // Sfondo barra
+            using (var bg = new SolidBrush(Color.FromArgb(20, 20, 20)))
+                g.FillRectangle(bg, x, y, w, h);
+
+            if (level <= 0f) return;
+
+            int fillH = Math.Max(1, (int)(level * h));
+
+            // Segmenti: verde (0-60%), giallo (60-85%), rosso (85-100%)
+            int greenH = (int)(h * 0.60f);
+            int yellowH = (int)(h * 0.25f);
+            int redH = h - greenH - yellowH;
+
+            // Segmento verde
+            int greenFill = Math.Min(fillH, greenH);
+            if (greenFill > 0)
+            {
+                using (var b = new SolidBrush(Color.FromArgb(0, 200, 50)))
+                    g.FillRectangle(b, x, y + h - greenFill, w, greenFill);
+            }
+
+            // Segmento giallo
+            if (fillH > greenH)
+            {
+                int yellowFill = Math.Min(fillH - greenH, yellowH);
+                using (var b = new SolidBrush(Color.FromArgb(220, 200, 0)))
+                    g.FillRectangle(b, x, y + h - greenH - yellowFill, w, yellowFill);
+            }
+
+            // Segmento rosso
+            if (fillH > greenH + yellowH)
+            {
+                int redFill = Math.Min(fillH - greenH - yellowH, redH);
+                using (var b = new SolidBrush(Color.FromArgb(220, 50, 30)))
+                    g.FillRectangle(b, x, y + h - greenH - yellowH - redFill, w, redFill);
             }
         }
 
@@ -719,6 +833,29 @@ namespace AirADV.Forms
                 _playbackPosition = len > 0 ? (float)pos / len : 0f;
                 picWaveform?.Invalidate();
 
+                // Aggiorna VU meter dai campioni correnti
+                if (pnlVuMeters != null && _channels >= 1)
+                {
+                    int sampleIdx = (int)(_playbackPosition * _samples.Length);
+                    int windowSize = Math.Min(VuMeterWindowSamples * _channels, sampleIdx);
+                    int startIdx = Math.Max(0, sampleIdx - windowSize);
+                    float peakL = 0f, peakR = 0f;
+                    for (int i = startIdx; i < sampleIdx && i < _samples.Length; i += _channels)
+                    {
+                        float absL = Math.Abs(_samples[i]);
+                        if (absL > peakL) peakL = absL;
+                        if (_channels > 1 && i + 1 < _samples.Length)
+                        {
+                            float absR = Math.Abs(_samples[i + 1]);
+                            if (absR > peakR) peakR = absR;
+                        }
+                    }
+                    if (_channels == 1) peakR = peakL;
+                    _vuLevelL = peakL;
+                    _vuLevelR = peakR;
+                    pnlVuMeters.Invalidate();
+                }
+
                 // Sincronizza VLC con la posizione audio ogni ~500ms (10 tick × 50ms)
                 if (_isVideo && _vlcPlayer != null)
                 {
@@ -739,7 +876,10 @@ namespace AirADV.Forms
             {
                 _playbackTimer.Stop();
                 _playbackPosition = 0f;
+                _vuLevelL = 0f;
+                _vuLevelR = 0f;
                 picWaveform?.Invalidate();
+                pnlVuMeters?.Invalidate();
             }
         }
 
@@ -823,6 +963,8 @@ namespace AirADV.Forms
             {
                 _playbackTimer?.Stop();
                 _playbackPosition = 0f;
+                _vuLevelL = 0f;
+                _vuLevelR = 0f;
 
                 if (_waveOut != null)
                 {
@@ -837,6 +979,7 @@ namespace AirADV.Forms
                 }
                 _isPlaying = false;
                 picWaveform?.Invalidate();
+                pnlVuMeters?.Invalidate();
             }
             catch { }
 
