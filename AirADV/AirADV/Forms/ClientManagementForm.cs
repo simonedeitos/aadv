@@ -1225,10 +1225,18 @@ namespace AirADV.Forms
                                 _audioPlayer.Stop();
                             }
 
-                            _audioPlayer.Load(spot.FilePath);
-                            lblPlayerStatus.Text = $"🎵 {spot.SpotTitle}";
-                            btnPlaySpot.Enabled = true;
-                            btnPlaySpot.Text = "▶";
+                            bool loaded = _audioPlayer.Load(spot.FilePath);
+                            if (loaded)
+                            {
+                                lblPlayerStatus.Text = $"🎵 {spot.SpotTitle}";
+                                btnPlaySpot.Enabled = true;
+                                btnPlaySpot.Text = "▶";
+                            }
+                            else
+                            {
+                                lblPlayerStatus.Text = LanguageManager.Get("ClientManagement.LoadError", "Errore caricamento file");
+                                btnPlaySpot.Enabled = false;
+                            }
                         }
                     }
                     else

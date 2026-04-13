@@ -102,6 +102,7 @@
             lblSpotCount = new Label();
             lblCategory = new Label();
             cmbCategory = new ComboBox();
+            btnAddCategory = new Button();
             grpPeriod = new GroupBox();
             lblStartDate = new Label();
             dtpStartDate = new DateTimePicker();

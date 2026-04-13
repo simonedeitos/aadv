@@ -71,6 +71,7 @@ namespace AirADV.Forms
         private Button btnSave;
         private Button btnCancel;
         private Label lblStatus;
+        private Label lblFileName;
 
         private static readonly string[] VIDEO_EXTENSIONS =
             { ".mp4", ".avi", ".mkv", ".mov", ".wmv", ".flv", ".webm", ".m4v", ".mpg", ".mpeg" };
@@ -199,6 +200,16 @@ namespace AirADV.Forms
             btnStop.Click += BtnStop_Click;
 
             pnlToolbar.Controls.AddRange(new Control[] { btnPlay, btnPause, btnStop });
+
+            lblFileName = new Label
+            {
+                Text = Path.GetFileName(_filePath),
+                AutoSize = true,
+                ForeColor = Color.Silver,
+                Location = new Point(156, 16),
+                Font = new Font("Segoe UI", 9.5f)
+            };
+            pnlToolbar.Controls.Add(lblFileName);
 
             // ── Area centrale: waveform + eventuale preview video ─────
             picWaveform = new PictureBox
@@ -483,8 +494,8 @@ namespace AirADV.Forms
                     Dock = DockStyle.Fill,
                     BackColor = Color.Black
                 };
-                _videoView.MediaPlayer = _vlcPlayer;
                 pnlVideo.Controls.Add(_videoView);
+                _videoView.MediaPlayer = _vlcPlayer;
 
                 var media = new Media(_libVLC, new Uri(_filePath));
                 _vlcPlayer.Media = media;
