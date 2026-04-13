@@ -55,6 +55,7 @@
         private System.Windows.Forms.Panel panelSpotsBottom;
         private System.Windows.Forms.Label lblPlayerStatus;
         private System.Windows.Forms.Button btnPlaySpot;
+        private System.Windows.Forms.Button btnStopSpot;
         private System.Windows.Forms.Label lblSpotsCount;
 
         // ✅ NUOVO: Video Preview con LibVLCSharp
@@ -123,6 +124,7 @@
             lblVideoTitle = new Label();
             lblPlayerStatus = new Label();
             btnPlaySpot = new Button();
+            btnStopSpot = new Button();
             lblSpotsCount = new Label();
             panelSpotsTop = new Panel();
             btnAddSpot = new Button();
@@ -535,6 +537,7 @@
             panelSpotsBottom.Controls.Add(pnlVideoPreview);
             panelSpotsBottom.Controls.Add(lblPlayerStatus);
             panelSpotsBottom.Controls.Add(btnPlaySpot);
+            panelSpotsBottom.Controls.Add(btnStopSpot);
             panelSpotsBottom.Controls.Add(lblSpotsCount);
             panelSpotsBottom.Dock = DockStyle.Bottom;
             panelSpotsBottom.Location = new Point(0, 598);
@@ -582,7 +585,7 @@
             lblPlayerStatus.AutoSize = true;
             lblPlayerStatus.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
             lblPlayerStatus.ForeColor = Color.FromArgb(0, 123, 255);
-            lblPlayerStatus.Location = new Point(431, 138);
+            lblPlayerStatus.Location = new Point(400, 48);
             lblPlayerStatus.Name = "lblPlayerStatus";
             lblPlayerStatus.Size = new Size(139, 19);
             lblPlayerStatus.TabIndex = 1;
@@ -595,13 +598,30 @@
             btnPlaySpot.FlatStyle = FlatStyle.Flat;
             btnPlaySpot.Font = new Font("Segoe UI", 14F, FontStyle.Bold);
             btnPlaySpot.ForeColor = Color.White;
-            btnPlaySpot.Location = new Point(324, 124);
+            btnPlaySpot.Location = new Point(300, 40);
             btnPlaySpot.Name = "btnPlaySpot";
-            btnPlaySpot.Size = new Size(70, 40);
+            btnPlaySpot.Size = new Size(40, 40);
             btnPlaySpot.TabIndex = 0;
             btnPlaySpot.Text = "▶";
             btnPlaySpot.UseVisualStyleBackColor = false;
+            btnPlaySpot.FlatAppearance.BorderSize = 0;
             btnPlaySpot.Click += btnPlaySpot_Click;
+            // 
+            // btnStopSpot
+            // 
+            btnStopSpot.BackColor = Color.FromArgb(220, 53, 69);
+            btnStopSpot.Enabled = true;
+            btnStopSpot.FlatStyle = FlatStyle.Flat;
+            btnStopSpot.Font = new Font("Segoe UI", 14F, FontStyle.Bold);
+            btnStopSpot.ForeColor = Color.White;
+            btnStopSpot.Location = new Point(348, 40);
+            btnStopSpot.Name = "btnStopSpot";
+            btnStopSpot.Size = new Size(40, 40);
+            btnStopSpot.TabIndex = 5;
+            btnStopSpot.Text = "⏹";
+            btnStopSpot.UseVisualStyleBackColor = false;
+            btnStopSpot.FlatAppearance.BorderSize = 0;
+            btnStopSpot.Click += btnStopSpot_Click;
             // 
             // lblSpotsCount
             // 
