@@ -22,6 +22,7 @@ namespace AirADV.Forms
         // ═══════════════════════════════════════════════════════════
         private LibVLC _libVLC;
         private LibVLCSharp.Shared.MediaPlayer _vlcMediaPlayer;
+        private static bool _vlcCoreInitialized = false;
 
         // ═══════════════════════════════════════════════════════════
         // ✅ ESTENSIONI VIDEO RICONOSCIUTE
@@ -132,8 +133,12 @@ namespace AirADV.Forms
         {
             try
             {
-                // Inizializza LibVLC
-                Core.Initialize();
+                // Inizializza LibVLC (una sola volta per evitare doppia init che può corrompere lo stato nativo)
+                if (!_vlcCoreInitialized)
+                {
+                    Core.Initialize();
+                    _vlcCoreInitialized = true;
+                }
 
                 _libVLC = new LibVLC(
                 //    "--no-audio",           // il video preview è muto di default
@@ -1168,6 +1173,9 @@ namespace AirADV.Forms
 
                 // Reinizializza il player VLC perché AudioEditorForm ha disposto le risorse native
                 ReinitializeVideoPreview();
+
+                // Ricarica lo spot selezionato nel player dopo il ritorno dall'editor
+                DgvSpots_SelectionChanged(this, EventArgs.Empty);
             }
             catch (Exception ex)
             {
