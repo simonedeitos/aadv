@@ -439,20 +439,28 @@ namespace AirADV.Forms
 
         private void LoadCategories()
         {
-            var categories = DbcManager.Load<DbcManager.Category>("ADV_Categories.dbc")
-                .Where(c => c.IsActive)
-                .OrderBy(c => c.CategoryName)
-                .ToList();
+            _isLoadingData = true;
+            try
+            {
+                var categories = DbcManager.Load<DbcManager.Category>("ADV_Categories.dbc")
+                    .Where(c => c.IsActive)
+                    .OrderBy(c => c.CategoryName)
+                    .ToList();
 
-            cmbCategory.DataSource = categories;
-            cmbCategory.DisplayMember = "CategoryName";
-            cmbCategory.ValueMember = "ID";
+                cmbCategory.DataSource = categories;
+                cmbCategory.DisplayMember = "CategoryName";
+                cmbCategory.ValueMember = "ID";
 
-            // ✅ Reset selezione (nessuna categoria di default)
-            if (categories.Count > 0)
-                cmbCategory.SelectedIndex = -1;
+                // ✅ Reset selezione (nessuna categoria di default)
+                if (categories.Count > 0)
+                    cmbCategory.SelectedIndex = -1;
 
-            Console.WriteLine($"[CampaignWizard] Caricate {categories.Count} categorie");
+                Console.WriteLine($"[CampaignWizard] Caricate {categories.Count} categorie");
+            }
+            finally
+            {
+                _isLoadingData = false;
+            }
         }
 
         // ✅ VALIDAZIONE STEP1 AGGIORNATA

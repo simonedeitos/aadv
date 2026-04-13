@@ -9,6 +9,7 @@ using System.Windows.Forms;
 using AirADV.Services;
 using AirADV.Services.Localization;
 using LibVLCSharp.Shared;
+using NAudio.MediaFoundation;
 using NAudio.Wave;
 
 namespace AirADV.Forms
@@ -32,7 +33,7 @@ namespace AirADV.Forms
 
         // ── NAudio (playback) ────────────────────────────────────────
         private WaveOutEvent _waveOut;
-        private AudioFileReader _audioReader;
+        private WaveStream _audioReader;
         private bool _isPlaying;
 
         // ── VLC (video preview) ──────────────────────────────────────
@@ -85,9 +86,11 @@ namespace AirADV.Forms
             BuildUI();
             ApplyLanguage();
 
+            this.KeyPreview = true;
             this.Load += AudioEditorForm_Load;
             this.FormClosing += AudioEditorForm_FormClosing;
-            this.Resize += (s, e) => { if (!_isVideo) RecreateWaveformBitmapWithBoost(); };
+            this.KeyDown += AudioEditorForm_KeyDown;
+            this.Resize += (s, e) => RecreateWaveformBitmapWithBoost();
         }
 
         // ═══════════════════════════════════════════════════════════
@@ -188,7 +191,7 @@ namespace AirADV.Forms
             btnPlay.Location = new Point(8, 6);
             btnPlay.Click += BtnPlay_Click;
 
-            btnPause = MakeIconButton("⏸", Color.FromArgb(255, 140, 0));
+            btnPause = MakeIconButton("❚❚", Color.FromArgb(255, 140, 0));
             btnPause.Location = new Point(56, 6);
             btnPause.Click += BtnPause_Click;
 
@@ -199,30 +202,29 @@ namespace AirADV.Forms
             pnlToolbar.Controls.AddRange(new Control[] { btnPlay, btnPause, btnStop });
             this.Controls.Add(pnlToolbar);
 
-            // ── Area centrale: waveform o video ───────────────────────
+            // ── Area centrale: waveform + eventuale preview video ─────
             if (_isVideo)
             {
                 pnlVideo = new Panel
                 {
-                    Dock = DockStyle.Fill,
+                    Dock = DockStyle.Top,
+                    Height = 160,
                     BackColor = Color.Black
                 };
                 this.Controls.Add(pnlVideo);
             }
-            else
+
+            picWaveform = new PictureBox
             {
-                picWaveform = new PictureBox
-                {
-                    Dock = DockStyle.Fill,
-                    BackColor = Color.FromArgb(10, 10, 10),
-                    Cursor = Cursors.Cross
-                };
-                picWaveform.Paint += PicWaveform_Paint;
-                picWaveform.MouseDown += PicWaveform_MouseDown;
-                picWaveform.MouseMove += PicWaveform_MouseMove;
-                picWaveform.MouseUp += PicWaveform_MouseUp;
-                this.Controls.Add(picWaveform);
-            }
+                Dock = DockStyle.Fill,
+                BackColor = Color.FromArgb(10, 10, 10),
+                Cursor = Cursors.Cross
+            };
+            picWaveform.Paint += PicWaveform_Paint;
+            picWaveform.MouseDown += PicWaveform_MouseDown;
+            picWaveform.MouseMove += PicWaveform_MouseMove;
+            picWaveform.MouseUp += PicWaveform_MouseUp;
+            this.Controls.Add(picWaveform);
 
             // ── Timer playback cursor ─────────────────────────────────
             _playbackTimer = new System.Windows.Forms.Timer { Interval = 50 };
@@ -264,7 +266,7 @@ namespace AirADV.Forms
         {
             this.Text = LanguageManager.Get("AudioEditor.Title", "✏️ Audio Editor");
             btnPlay.Text = LanguageManager.Get("AudioEditor.BtnPlay", "▶");
-            btnPause.Text = LanguageManager.Get("AudioEditor.BtnPause", "⏸");
+            btnPause.Text = LanguageManager.Get("AudioEditor.BtnPause", "❚❚");
             btnStop.Text = LanguageManager.Get("AudioEditor.BtnStop", "⏹");
             lblGain.Text = LanguageManager.Get("AudioEditor.LblGain", "Gain (dB):");
             btnDeleteSel.Text = LanguageManager.Get("AudioEditor.BtnDeleteSelection", "🗑️ Elimina Selezione");
@@ -289,8 +291,8 @@ namespace AirADV.Forms
 
             if (_isVideo)
                 InitVideoPlayer();
-            else
-                LoadWaveformAndSamples();
+
+            LoadWaveformAndSamples();
         }
 
         // ── Fase 1: quick preview 800 campioni + Fase 2: full 6000 campioni ──
@@ -328,6 +330,12 @@ namespace AirADV.Forms
 
         private void LoadWaveformPhase(int numPoints)
         {
+            if (_isVideo)
+            {
+                LoadWaveformFromVideoSequential(numPoints);
+                return;
+            }
+
             using (var reader = new AudioFileReader(_filePath))
             {
                 var format = reader.WaveFormat;
@@ -368,25 +376,88 @@ namespace AirADV.Forms
             }
         }
 
+        private void LoadWaveformFromVideoSequential(int numPoints)
+        {
+            try
+            {
+                using (var reader = new MediaFoundationReader(_filePath))
+                {
+                    var sampleProvider = reader.ToSampleProvider();
+                    var allSamples = new List<float>();
+                    float[] buffer = new float[4096];
+                    int read;
+                    while ((read = sampleProvider.Read(buffer, 0, buffer.Length)) > 0)
+                    {
+                        for (int i = 0; i < read; i++)
+                            allSamples.Add(Math.Abs(buffer[i]));
+                    }
+
+                    float[] data = new float[numPoints];
+                    int total = allSamples.Count;
+                    for (int i = 0; i < numPoints; i++)
+                    {
+                        int start = (int)((long)i * total / numPoints);
+                        int end = (int)((long)(i + 1) * total / numPoints);
+                        end = Math.Max(end, start + 1);
+                        end = Math.Min(end, total);
+                        float max = 0f;
+                        for (int j = start; j < end; j++)
+                            if (allSamples[j] > max) max = allSamples[j];
+                        data[i] = max;
+                    }
+
+                    _originalWaveformData = data;
+                    _waveformData = (float[])data.Clone();
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[AudioEditor] Errore waveform video: {ex.Message}");
+            }
+        }
+
         private void LoadAllSamples()
         {
             try
             {
-                using (var reader = new AudioFileReader(_filePath))
+                if (_isVideo)
                 {
-                    _waveFormat = reader.WaveFormat;
-                    _sampleRate = reader.WaveFormat.SampleRate;
-                    _channels = reader.WaveFormat.Channels;
-
-                    var allSamples = new List<float>();
-                    float[] buffer = new float[_sampleRate * _channels];
-                    int read;
-                    while ((read = reader.Read(buffer, 0, buffer.Length)) > 0)
+                    using (var reader = new MediaFoundationReader(_filePath))
                     {
-                        for (int i = 0; i < read; i++)
-                            allSamples.Add(buffer[i]);
+                        _sampleRate = reader.WaveFormat.SampleRate;
+                        _channels = reader.WaveFormat.Channels;
+                        _waveFormat = WaveFormat.CreateIeeeFloatWaveFormat(_sampleRate, _channels);
+
+                        var sampleProvider = reader.ToSampleProvider();
+                        var allSamples = new List<float>();
+                        float[] buffer = new float[_sampleRate * _channels];
+                        int read;
+                        while ((read = sampleProvider.Read(buffer, 0, buffer.Length)) > 0)
+                        {
+                            for (int i = 0; i < read; i++)
+                                allSamples.Add(buffer[i]);
+                        }
+                        _samples = allSamples.ToArray();
                     }
-                    _samples = allSamples.ToArray();
+                }
+                else
+                {
+                    using (var reader = new AudioFileReader(_filePath))
+                    {
+                        _waveFormat = reader.WaveFormat;
+                        _sampleRate = reader.WaveFormat.SampleRate;
+                        _channels = reader.WaveFormat.Channels;
+
+                        var allSamples = new List<float>();
+                        float[] buffer = new float[_sampleRate * _channels];
+                        int read;
+                        while ((read = reader.Read(buffer, 0, buffer.Length)) > 0)
+                        {
+                            for (int i = 0; i < read; i++)
+                                allSamples.Add(buffer[i]);
+                        }
+                        _samples = allSamples.ToArray();
+                    }
                 }
 
                 if (lblStatus != null && _samples != null)
@@ -559,11 +630,29 @@ namespace AirADV.Forms
             lblGainValue.ForeColor = _gainDb > 0 ? Color.Orange : _gainDb < 0 ? Color.DeepSkyBlue : Color.Lime;
 
             // Aggiorna volume live in preview audio
-            if (_audioReader != null)
-                _audioReader.Volume = (float)Math.Pow(10.0, _gainDb / 20.0);
+            if (_audioReader is AudioFileReader afeGain)
+                afeGain.Volume = (float)Math.Pow(10.0, _gainDb / 20.0);
+            else if (_waveOut != null)
+                _waveOut.Volume = (float)Math.Pow(10.0, _gainDb / 20.0);
 
             // Preview visivo in tempo reale sulla waveform
             RecreateWaveformBitmapWithBoost();
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        // SPACEBAR SHORTCUT
+        // ═══════════════════════════════════════════════════════════
+        private void AudioEditorForm_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Space)
+            {
+                e.SuppressKeyPress = true;
+                e.Handled = true;
+                if (_isPlaying)
+                    BtnPause_Click(sender, EventArgs.Empty);
+                else
+                    BtnPlay_Click(sender, EventArgs.Empty);
+            }
         }
 
         // ═══════════════════════════════════════════════════════════
@@ -588,19 +677,21 @@ namespace AirADV.Forms
 
         private void BtnPlay_Click(object sender, EventArgs e)
         {
-            if (_isVideo)
-            {
-                _vlcPlayer?.Play();
-                return;
-            }
-
             try
             {
                 StopAudio();
-                _audioReader = new AudioFileReader(_filePath);
-                _audioReader.Volume = (float)Math.Pow(10.0, _gainDb / 20.0);
+
+                if (_isVideo)
+                    _audioReader = new MediaFoundationReader(_filePath);
+                else
+                    _audioReader = new AudioFileReader(_filePath);
+
+                float vol = (float)Math.Pow(10.0, _gainDb / 20.0);
+                if (_audioReader is AudioFileReader afePlay)
+                    afePlay.Volume = vol;
 
                 _waveOut = new WaveOutEvent();
+                _waveOut.Volume = vol;
                 _waveOut.Init(_audioReader);
                 _waveOut.PlaybackStopped += (s, ev) =>
                 {
@@ -624,7 +715,6 @@ namespace AirADV.Forms
 
         private void BtnPause_Click(object sender, EventArgs e)
         {
-            if (_isVideo) { _vlcPlayer?.Pause(); return; }
             if (_waveOut != null && _isPlaying)
             {
                 _waveOut.Pause();
@@ -635,7 +725,6 @@ namespace AirADV.Forms
 
         private void BtnStop_Click(object sender, EventArgs e)
         {
-            if (_isVideo) { _vlcPlayer?.Stop(); return; }
             StopAudio();
         }
 
