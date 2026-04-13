@@ -67,6 +67,7 @@
 
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(TimeSlotsForm));
             panelTop = new Panel();
             lblTitle = new Label();
             splitMain = new SplitContainer();
@@ -304,7 +305,7 @@
             lblConfigMaxDuration.Font = new Font("Segoe UI", 9F);
             lblConfigMaxDuration.Location = new Point(15, 40);
             lblConfigMaxDuration.Name = "lblConfigMaxDuration";
-            lblConfigMaxDuration.Size = new Size(87, 15);
+            lblConfigMaxDuration.Size = new Size(86, 15);
             lblConfigMaxDuration.TabIndex = 0;
             lblConfigMaxDuration.Text = "Durata Max (s):";
             // 
@@ -569,6 +570,7 @@
             Controls.Add(splitMain);
             Controls.Add(panelTop);
             Controls.Add(panelBottom);
+            Icon = (Icon)resources.GetObject("$this.Icon");
             MinimumSize = new Size(1200, 700);
             Name = "TimeSlotsForm";
             StartPosition = FormStartPosition.CenterScreen;

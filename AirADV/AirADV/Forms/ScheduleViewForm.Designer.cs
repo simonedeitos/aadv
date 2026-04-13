@@ -39,6 +39,7 @@
         {
             DataGridViewCellStyle dataGridViewCellStyle1 = new DataGridViewCellStyle();
             DataGridViewCellStyle dataGridViewCellStyle2 = new DataGridViewCellStyle();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ScheduleViewForm));
             panelTop = new Panel();
             lblTitle = new Label();
             panelToolbar = new Panel();
@@ -76,7 +77,7 @@
             lblTitle.ForeColor = Color.White;
             lblTitle.Location = new Point(20, 13);
             lblTitle.Name = "lblTitle";
-            lblTitle.Size = new Size(280, 25);
+            lblTitle.Size = new Size(281, 25);
             lblTitle.TabIndex = 0;
             lblTitle.Text = "📅 PALINSESTO GIORNALIERO";
             // 
@@ -272,6 +273,7 @@
             Controls.Add(panelToolbar);
             Controls.Add(panelTop);
             Controls.Add(panelBottom);
+            Icon = (Icon)resources.GetObject("$this.Icon");
             MinimumSize = new Size(1400, 700);
             Name = "ScheduleViewForm";
             StartPosition = FormStartPosition.CenterScreen;

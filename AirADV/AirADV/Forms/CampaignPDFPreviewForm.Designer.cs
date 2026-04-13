@@ -31,55 +31,51 @@
 
         private void InitializeComponent()
         {
-            panelTop = new System.Windows.Forms.Panel();
-            lblTitle = new System.Windows.Forms.Label();
-            panelButtons = new System.Windows.Forms.Panel();
-            btnSavePDF = new System.Windows.Forms.Button();
-            btnPrint = new System.Windows.Forms.Button();
-            btnFirstPage = new System.Windows.Forms.Button();
-            btnPrevPage = new System.Windows.Forms.Button();
-            lblPageInfo = new System.Windows.Forms.Label();
-            btnNextPage = new System.Windows.Forms.Button();
-            btnLastPage = new System.Windows.Forms.Button();
-            btnZoomIn = new System.Windows.Forms.Button();
-            btnZoomOut = new System.Windows.Forms.Button();
-            btnClose = new System.Windows.Forms.Button();
-            // ✅ FIX:  Usa il nome corretto
-            _previewControl = new System.Windows.Forms.PrintPreviewControl();
-
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(CampaignPDFPreviewForm));
+            panelTop = new Panel();
+            lblTitle = new Label();
+            panelButtons = new Panel();
+            btnSavePDF = new Button();
+            btnPrint = new Button();
+            btnFirstPage = new Button();
+            btnPrevPage = new Button();
+            lblPageInfo = new Label();
+            btnNextPage = new Button();
+            btnLastPage = new Button();
+            btnZoomIn = new Button();
+            btnZoomOut = new Button();
+            btnClose = new Button();
+            _previewControl = new PrintPreviewControl();
             panelTop.SuspendLayout();
             panelButtons.SuspendLayout();
             SuspendLayout();
-
             // 
             // panelTop
             // 
-            panelTop.BackColor = System.Drawing.Color.FromArgb(0, 123, 255);
+            panelTop.BackColor = Color.FromArgb(0, 123, 255);
             panelTop.Controls.Add(lblTitle);
-            panelTop.Dock = System.Windows.Forms.DockStyle.Top;
-            panelTop.Location = new System.Drawing.Point(0, 0);
+            panelTop.Dock = DockStyle.Top;
+            panelTop.Location = new Point(0, 0);
             panelTop.Name = "panelTop";
-            panelTop.Size = new System.Drawing.Size(1200, 60);
+            panelTop.Size = new Size(1200, 60);
             panelTop.TabIndex = 0;
-
             // 
             // lblTitle
             // 
-            lblTitle.Dock = System.Windows.Forms.DockStyle.Fill;
-            lblTitle.Font = new System.Drawing.Font("Segoe UI", 16F, System.Drawing.FontStyle.Bold);
-            lblTitle.ForeColor = System.Drawing.Color.White;
-            lblTitle.Location = new System.Drawing.Point(0, 0);
+            lblTitle.Dock = DockStyle.Fill;
+            lblTitle.Font = new Font("Segoe UI", 16F, FontStyle.Bold);
+            lblTitle.ForeColor = Color.White;
+            lblTitle.Location = new Point(0, 0);
             lblTitle.Name = "lblTitle";
-            lblTitle.Size = new System.Drawing.Size(1200, 60);
+            lblTitle.Size = new Size(1200, 60);
             lblTitle.TabIndex = 0;
             lblTitle.Text = "📄 Anteprima Programmazione Campagna Pubblicitaria";
-            lblTitle.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-
+            lblTitle.TextAlign = ContentAlignment.MiddleCenter;
             // 
             // panelButtons
             // 
-            panelButtons.BackColor = System.Drawing.Color.FromArgb(240, 240, 240);
-            panelButtons.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            panelButtons.BackColor = Color.FromArgb(240, 240, 240);
+            panelButtons.BorderStyle = BorderStyle.FixedSingle;
             panelButtons.Controls.Add(btnSavePDF);
             panelButtons.Controls.Add(btnPrint);
             panelButtons.Controls.Add(btnFirstPage);
@@ -90,198 +86,187 @@
             panelButtons.Controls.Add(btnZoomIn);
             panelButtons.Controls.Add(btnZoomOut);
             panelButtons.Controls.Add(btnClose);
-            panelButtons.Dock = System.Windows.Forms.DockStyle.Bottom;
-            panelButtons.Location = new System.Drawing.Point(0, 740);
+            panelButtons.Dock = DockStyle.Bottom;
+            panelButtons.Location = new Point(0, 770);
             panelButtons.Name = "panelButtons";
-            panelButtons.Size = new System.Drawing.Size(1200, 50);
+            panelButtons.Size = new Size(1200, 50);
             panelButtons.TabIndex = 1;
-
             // 
             // btnSavePDF
             // 
-            btnSavePDF.BackColor = System.Drawing.Color.FromArgb(40, 167, 69);
+            btnSavePDF.BackColor = Color.FromArgb(40, 167, 69);
             btnSavePDF.FlatAppearance.BorderSize = 0;
-            btnSavePDF.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            btnSavePDF.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
-            btnSavePDF.ForeColor = System.Drawing.Color.White;
-            btnSavePDF.Location = new System.Drawing.Point(30, 8);
+            btnSavePDF.FlatStyle = FlatStyle.Flat;
+            btnSavePDF.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+            btnSavePDF.ForeColor = Color.White;
+            btnSavePDF.Location = new Point(30, 8);
             btnSavePDF.Name = "btnSavePDF";
-            btnSavePDF.Size = new System.Drawing.Size(140, 34);
+            btnSavePDF.Size = new Size(140, 34);
             btnSavePDF.TabIndex = 0;
             btnSavePDF.Text = "💾 Salva PDF";
             btnSavePDF.UseVisualStyleBackColor = false;
             btnSavePDF.Click += btnSavePDF_Click;
-
             // 
             // btnPrint
             // 
-            btnPrint.BackColor = System.Drawing.Color.FromArgb(0, 123, 255);
+            btnPrint.BackColor = Color.FromArgb(0, 123, 255);
             btnPrint.FlatAppearance.BorderSize = 0;
-            btnPrint.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            btnPrint.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
-            btnPrint.ForeColor = System.Drawing.Color.White;
-            btnPrint.Location = new System.Drawing.Point(190, 8);
+            btnPrint.FlatStyle = FlatStyle.Flat;
+            btnPrint.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+            btnPrint.ForeColor = Color.White;
+            btnPrint.Location = new Point(190, 8);
             btnPrint.Name = "btnPrint";
-            btnPrint.Size = new System.Drawing.Size(140, 34);
+            btnPrint.Size = new Size(140, 34);
             btnPrint.TabIndex = 1;
             btnPrint.Text = "🖨️ Stampa";
             btnPrint.UseVisualStyleBackColor = false;
             btnPrint.Click += btnPrint_Click;
-
             // 
             // btnFirstPage
             // 
-            btnFirstPage.BackColor = System.Drawing.Color.FromArgb(108, 117, 125);
+            btnFirstPage.BackColor = Color.FromArgb(108, 117, 125);
             btnFirstPage.FlatAppearance.BorderSize = 0;
-            btnFirstPage.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            btnFirstPage.Font = new System.Drawing.Font("Segoe UI", 13F, System.Drawing.FontStyle.Bold);
-            btnFirstPage.ForeColor = System.Drawing.Color.White;
-            btnFirstPage.Location = new System.Drawing.Point(440, 8);
+            btnFirstPage.FlatStyle = FlatStyle.Flat;
+            btnFirstPage.Font = new Font("Segoe UI", 13F, FontStyle.Bold);
+            btnFirstPage.ForeColor = Color.White;
+            btnFirstPage.Location = new Point(440, 8);
             btnFirstPage.Name = "btnFirstPage";
-            btnFirstPage.Size = new System.Drawing.Size(50, 34);
+            btnFirstPage.Size = new Size(50, 34);
             btnFirstPage.TabIndex = 5;
             btnFirstPage.Text = "⏮";
             btnFirstPage.UseVisualStyleBackColor = false;
             btnFirstPage.Click += btnFirstPage_Click;
-
             // 
             // btnPrevPage
             // 
-            btnPrevPage.BackColor = System.Drawing.Color.FromArgb(108, 117, 125);
+            btnPrevPage.BackColor = Color.FromArgb(108, 117, 125);
             btnPrevPage.FlatAppearance.BorderSize = 0;
-            btnPrevPage.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            btnPrevPage.Font = new System.Drawing.Font("Segoe UI", 13F, System.Drawing.FontStyle.Bold);
-            btnPrevPage.ForeColor = System.Drawing.Color.White;
-            btnPrevPage.Location = new System.Drawing.Point(500, 8);
+            btnPrevPage.FlatStyle = FlatStyle.Flat;
+            btnPrevPage.Font = new Font("Segoe UI", 13F, FontStyle.Bold);
+            btnPrevPage.ForeColor = Color.White;
+            btnPrevPage.Location = new Point(500, 8);
             btnPrevPage.Name = "btnPrevPage";
-            btnPrevPage.Size = new System.Drawing.Size(50, 34);
+            btnPrevPage.Size = new Size(50, 34);
             btnPrevPage.TabIndex = 6;
             btnPrevPage.Text = "◀";
             btnPrevPage.UseVisualStyleBackColor = false;
             btnPrevPage.Click += btnPrevPage_Click;
-
             // 
             // lblPageInfo
             // 
-            lblPageInfo.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
-            lblPageInfo.ForeColor = System.Drawing.Color.FromArgb(50, 50, 50);
-            lblPageInfo.Location = new System.Drawing.Point(560, 8);
+            lblPageInfo.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
+            lblPageInfo.ForeColor = Color.FromArgb(50, 50, 50);
+            lblPageInfo.Location = new Point(560, 8);
             lblPageInfo.Name = "lblPageInfo";
-            lblPageInfo.Size = new System.Drawing.Size(150, 34);
+            lblPageInfo.Size = new Size(150, 34);
             lblPageInfo.TabIndex = 7;
             lblPageInfo.Text = "Pagina 1 / 1";
-            lblPageInfo.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-
+            lblPageInfo.TextAlign = ContentAlignment.MiddleCenter;
             // 
             // btnNextPage
             // 
-            btnNextPage.BackColor = System.Drawing.Color.FromArgb(108, 117, 125);
+            btnNextPage.BackColor = Color.FromArgb(108, 117, 125);
             btnNextPage.FlatAppearance.BorderSize = 0;
-            btnNextPage.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            btnNextPage.Font = new System.Drawing.Font("Segoe UI", 13F, System.Drawing.FontStyle.Bold);
-            btnNextPage.ForeColor = System.Drawing.Color.White;
-            btnNextPage.Location = new System.Drawing.Point(720, 8);
+            btnNextPage.FlatStyle = FlatStyle.Flat;
+            btnNextPage.Font = new Font("Segoe UI", 13F, FontStyle.Bold);
+            btnNextPage.ForeColor = Color.White;
+            btnNextPage.Location = new Point(720, 8);
             btnNextPage.Name = "btnNextPage";
-            btnNextPage.Size = new System.Drawing.Size(50, 34);
+            btnNextPage.Size = new Size(50, 34);
             btnNextPage.TabIndex = 8;
             btnNextPage.Text = "▶";
             btnNextPage.UseVisualStyleBackColor = false;
             btnNextPage.Click += btnNextPage_Click;
-
             // 
             // btnLastPage
             // 
-            btnLastPage.BackColor = System.Drawing.Color.FromArgb(108, 117, 125);
+            btnLastPage.BackColor = Color.FromArgb(108, 117, 125);
             btnLastPage.FlatAppearance.BorderSize = 0;
-            btnLastPage.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            btnLastPage.Font = new System.Drawing.Font("Segoe UI", 13F, System.Drawing.FontStyle.Bold);
-            btnLastPage.ForeColor = System.Drawing.Color.White;
-            btnLastPage.Location = new System.Drawing.Point(780, 8);
+            btnLastPage.FlatStyle = FlatStyle.Flat;
+            btnLastPage.Font = new Font("Segoe UI", 13F, FontStyle.Bold);
+            btnLastPage.ForeColor = Color.White;
+            btnLastPage.Location = new Point(780, 8);
             btnLastPage.Name = "btnLastPage";
-            btnLastPage.Size = new System.Drawing.Size(50, 34);
+            btnLastPage.Size = new Size(50, 34);
             btnLastPage.TabIndex = 9;
             btnLastPage.Text = "⏭";
             btnLastPage.UseVisualStyleBackColor = false;
             btnLastPage.Click += btnLastPage_Click;
-
             // 
             // btnZoomIn
             // 
-            btnZoomIn.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right;
-            btnZoomIn.BackColor = System.Drawing.Color.FromArgb(108, 117, 125);
+            btnZoomIn.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            btnZoomIn.BackColor = Color.FromArgb(108, 117, 125);
             btnZoomIn.FlatAppearance.BorderSize = 0;
-            btnZoomIn.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            btnZoomIn.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Bold);
-            btnZoomIn.ForeColor = System.Drawing.Color.White;
-            btnZoomIn.Location = new System.Drawing.Point(930, 8);
+            btnZoomIn.FlatStyle = FlatStyle.Flat;
+            btnZoomIn.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
+            btnZoomIn.ForeColor = Color.White;
+            btnZoomIn.Location = new Point(930, 8);
             btnZoomIn.Name = "btnZoomIn";
-            btnZoomIn.Size = new System.Drawing.Size(44, 34);
+            btnZoomIn.Size = new Size(44, 34);
             btnZoomIn.TabIndex = 2;
             btnZoomIn.Text = "🔍+";
             btnZoomIn.UseVisualStyleBackColor = false;
             btnZoomIn.Click += btnZoomIn_Click;
-
             // 
             // btnZoomOut
             // 
-            btnZoomOut.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right;
-            btnZoomOut.BackColor = System.Drawing.Color.FromArgb(108, 117, 125);
+            btnZoomOut.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            btnZoomOut.BackColor = Color.FromArgb(108, 117, 125);
             btnZoomOut.FlatAppearance.BorderSize = 0;
-            btnZoomOut.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            btnZoomOut.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Bold);
-            btnZoomOut.ForeColor = System.Drawing.Color.White;
-            btnZoomOut.Location = new System.Drawing.Point(984, 8);
+            btnZoomOut.FlatStyle = FlatStyle.Flat;
+            btnZoomOut.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
+            btnZoomOut.ForeColor = Color.White;
+            btnZoomOut.Location = new Point(984, 8);
             btnZoomOut.Name = "btnZoomOut";
-            btnZoomOut.Size = new System.Drawing.Size(44, 34);
+            btnZoomOut.Size = new Size(44, 34);
             btnZoomOut.TabIndex = 3;
             btnZoomOut.Text = "🔍-";
             btnZoomOut.UseVisualStyleBackColor = false;
             btnZoomOut.Click += btnZoomOut_Click;
-
             // 
             // btnClose
             // 
-            btnClose.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right;
-            btnClose.BackColor = System.Drawing.Color.FromArgb(220, 53, 69);
+            btnClose.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            btnClose.BackColor = Color.FromArgb(220, 53, 69);
             btnClose.FlatAppearance.BorderSize = 0;
-            btnClose.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            btnClose.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
-            btnClose.ForeColor = System.Drawing.Color.White;
-            btnClose.Location = new System.Drawing.Point(1070, 8);
+            btnClose.FlatStyle = FlatStyle.Flat;
+            btnClose.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+            btnClose.ForeColor = Color.White;
+            btnClose.Location = new Point(1070, 8);
             btnClose.Name = "btnClose";
-            btnClose.Size = new System.Drawing.Size(120, 34);
+            btnClose.Size = new Size(120, 34);
             btnClose.TabIndex = 4;
             btnClose.Text = "✖ Chiudi";
             btnClose.UseVisualStyleBackColor = false;
             btnClose.Click += btnClose_Click;
-
             // 
             // _previewControl
             // 
-            _previewControl.BackColor = System.Drawing.Color.FromArgb(64, 64, 64);
-            _previewControl.Dock = System.Windows.Forms.DockStyle.Fill;
-            _previewControl.Location = new System.Drawing.Point(0, 60);
+            _previewControl.AutoZoom = false;
+            _previewControl.BackColor = Color.FromArgb(64, 64, 64);
+            _previewControl.Dock = DockStyle.Fill;
+            _previewControl.Location = new Point(0, 60);
             _previewControl.Name = "_previewControl";
-            _previewControl.Size = new System.Drawing.Size(1200, 680);
+            _previewControl.Size = new Size(1200, 710);
             _previewControl.TabIndex = 2;
             _previewControl.UseAntiAlias = true;
-            _previewControl.Zoom = 1.0;
-
+            _previewControl.Zoom = 1D;
             // 
             // CampaignPDFPreviewForm
             // 
-            AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
-            AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            ClientSize = new System.Drawing.Size(1200, 820);
+            AutoScaleDimensions = new SizeF(7F, 15F);
+            AutoScaleMode = AutoScaleMode.Font;
+            ClientSize = new Size(1200, 820);
             Controls.Add(_previewControl);
             Controls.Add(panelButtons);
             Controls.Add(panelTop);
-            MinimumSize = new System.Drawing.Size(1000, 700);
+            Icon = (Icon)resources.GetObject("$this.Icon");
+            MinimumSize = new Size(1000, 700);
             Name = "CampaignPDFPreviewForm";
-            StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
+            StartPosition = FormStartPosition.CenterParent;
             Text = "Anteprima PDF - Programmazione Campagna";
-            WindowState = System.Windows.Forms.FormWindowState.Maximized;
-
+            WindowState = FormWindowState.Maximized;
             panelTop.ResumeLayout(false);
             panelButtons.ResumeLayout(false);
             ResumeLayout(false);

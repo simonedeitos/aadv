@@ -329,6 +329,7 @@
             Controls.Add(panelBottom);
             Controls.Add(panelTop);
             FormBorderStyle = FormBorderStyle.FixedSingle;
+            Icon = (Icon)resources.GetObject("$this.Icon");
             MaximizeBox = false;
             Name = "MainForm";
             StartPosition = FormStartPosition.CenterScreen;

@@ -83,6 +83,7 @@
 
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ClientManagementForm));
             splitMain = new SplitContainer();
             dgvClients = new DataGridView();
             panelClientsBottom = new Panel();
@@ -592,6 +593,7 @@
             // 
             btnPlaySpot.BackColor = Color.FromArgb(40, 167, 69);
             btnPlaySpot.Enabled = false;
+            btnPlaySpot.FlatAppearance.BorderSize = 0;
             btnPlaySpot.FlatStyle = FlatStyle.Flat;
             btnPlaySpot.Font = new Font("Segoe UI", 14F, FontStyle.Bold);
             btnPlaySpot.ForeColor = Color.White;
@@ -601,7 +603,6 @@
             btnPlaySpot.TabIndex = 0;
             btnPlaySpot.Text = "▶";
             btnPlaySpot.UseVisualStyleBackColor = false;
-            btnPlaySpot.FlatAppearance.BorderSize = 0;
             btnPlaySpot.Click += btnPlaySpot_Click;
             // 
             // lblSpotsCount
@@ -792,6 +793,7 @@
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(1645, 800);
             Controls.Add(splitMain);
+            Icon = (Icon)resources.GetObject("$this.Icon");
             MinimumSize = new Size(1200, 700);
             Name = "ClientManagementForm";
             StartPosition = FormStartPosition.CenterScreen;

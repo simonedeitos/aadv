@@ -50,6 +50,7 @@
 
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(LannerCampaignForm));
             grpEditPanel = new GroupBox();
             lblClientNameLabel = new Label();
             txtClientName = new TextBox();
@@ -419,6 +420,7 @@
             Controls.Add(dgvCampaigns);
             Controls.Add(panelBottom);
             Controls.Add(grpEditPanel);
+            Icon = (Icon)resources.GetObject("$this.Icon");
             MinimumSize = new Size(900, 600);
             Name = "LannerCampaignForm";
             StartPosition = FormStartPosition.CenterParent;

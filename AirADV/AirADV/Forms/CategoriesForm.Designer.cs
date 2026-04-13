@@ -26,6 +26,7 @@
 
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(CategoriesForm));
             panelTop = new Panel();
             lblTitle = new Label();
             panelToolbar = new Panel();
@@ -184,6 +185,7 @@
             Controls.Add(panelBottom);
             Controls.Add(panelToolbar);
             Controls.Add(panelTop);
+            Icon = (Icon)resources.GetObject("$this.Icon");
             MinimumSize = new Size(800, 500);
             Name = "CategoriesForm";
             StartPosition = FormStartPosition.CenterParent;

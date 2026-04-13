@@ -60,449 +60,509 @@
 
         private void InitializeComponent()
         {
-            this.components = new System.ComponentModel.Container();
-
-            this.panelTop = new System.Windows.Forms.Panel();
-            this.lblTitle = new System.Windows.Forms.Label();
-
-            this.grpFilters = new System.Windows.Forms.GroupBox();
-            this.lblDateFrom = new System.Windows.Forms.Label();
-            this.dtpDateFrom = new System.Windows.Forms.DateTimePicker();
-            this.lblDateTo = new System.Windows.Forms.Label();
-            this.dtpDateTo = new System.Windows.Forms.DateTimePicker();
-            this.lblClient = new System.Windows.Forms.Label();
-            this.cmbClient = new System.Windows.Forms.ComboBox();
-            this.lblCampaign = new System.Windows.Forms.Label();
-            this.cmbCampaign = new System.Windows.Forms.ComboBox();
-            this.btnGenerate = new System.Windows.Forms.Button();
-            this.lblLoading = new System.Windows.Forms.Label();
-
-            this.tabReports = new System.Windows.Forms.TabControl();
-            this.tabStatistics = new System.Windows.Forms.TabPage();
-            this.tabByCampaign = new System.Windows.Forms.TabPage();
-            this.tabByClient = new System.Windows.Forms.TabPage();
-            this.tabByCategory = new System.Windows.Forms.TabPage();
-
-            this.panelStatistics = new System.Windows.Forms.Panel();
-            this.lblTotalDays = new System.Windows.Forms.Label();
-            this.lblTotalPasses = new System.Windows.Forms.Label();
-            this.lblTotalDuration = new System.Windows.Forms.Label();
-            this.lblUniqueCampaigns = new System.Windows.Forms.Label();
-            this.lblUniqueClients = new System.Windows.Forms.Label();
-            this.lblUniqueSpots = new System.Windows.Forms.Label();
-            this.lblAvgPassesPerDay = new System.Windows.Forms.Label();
-            this.lblAvgDurationPerDay = new System.Windows.Forms.Label();
-
-            this.dgvCampaigns = new System.Windows.Forms.DataGridView();
-            this.dgvClients = new System.Windows.Forms.DataGridView();
-            this.dgvCategories = new System.Windows.Forms.DataGridView();
-
-            this.panelBottom = new System.Windows.Forms.Panel();
-            this.btnExportPdf = new System.Windows.Forms.Button();
-            this.btnExportCsv = new System.Windows.Forms.Button();
-
-            this.panelTop.SuspendLayout();
-            this.grpFilters.SuspendLayout();
-            this.tabReports.SuspendLayout();
-            this.tabStatistics.SuspendLayout();
-            this.tabByCampaign.SuspendLayout();
-            this.tabByClient.SuspendLayout();
-            this.tabByCategory.SuspendLayout();
-            this.panelStatistics.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.dgvCampaigns)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.dgvClients)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.dgvCategories)).BeginInit();
-            this.panelBottom.SuspendLayout();
-            this.SuspendLayout();
-
+            DataGridViewCellStyle dataGridViewCellStyle1 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle2 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle3 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle4 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle5 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle6 = new DataGridViewCellStyle();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ReportForm));
+            panelTop = new Panel();
+            lblTitle = new Label();
+            grpFilters = new GroupBox();
+            lblDateFrom = new Label();
+            dtpDateFrom = new DateTimePicker();
+            lblDateTo = new Label();
+            dtpDateTo = new DateTimePicker();
+            lblClient = new Label();
+            cmbClient = new ComboBox();
+            lblCampaign = new Label();
+            cmbCampaign = new ComboBox();
+            btnGenerate = new Button();
+            lblLoading = new Label();
+            tabReports = new TabControl();
+            tabStatistics = new TabPage();
+            panelStatistics = new Panel();
+            lblTotalDays = new Label();
+            lblTotalPasses = new Label();
+            lblTotalDuration = new Label();
+            lblUniqueCampaigns = new Label();
+            lblUniqueClients = new Label();
+            lblUniqueSpots = new Label();
+            lblAvgPassesPerDay = new Label();
+            lblAvgDurationPerDay = new Label();
+            tabByCampaign = new TabPage();
+            dgvCampaigns = new DataGridView();
+            tabByClient = new TabPage();
+            dgvClients = new DataGridView();
+            tabByCategory = new TabPage();
+            dgvCategories = new DataGridView();
+            panelBottom = new Panel();
+            btnExportPdf = new Button();
+            btnExportCsv = new Button();
+            panelTop.SuspendLayout();
+            grpFilters.SuspendLayout();
+            tabReports.SuspendLayout();
+            tabStatistics.SuspendLayout();
+            panelStatistics.SuspendLayout();
+            tabByCampaign.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)dgvCampaigns).BeginInit();
+            tabByClient.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)dgvClients).BeginInit();
+            tabByCategory.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)dgvCategories).BeginInit();
+            panelBottom.SuspendLayout();
+            SuspendLayout();
             // 
             // panelTop
             // 
-            this.panelTop.BackColor = System.Drawing.Color.FromArgb(45, 45, 48);
-            this.panelTop.Controls.Add(this.lblTitle);
-            this.panelTop.Dock = System.Windows.Forms.DockStyle.Top;
-            this.panelTop.Location = new System.Drawing.Point(0, 0);
-            this.panelTop.Name = "panelTop";
-            this.panelTop.Size = new System.Drawing.Size(1400, 60);
-            this.panelTop.TabIndex = 0;
-
+            panelTop.BackColor = Color.FromArgb(45, 45, 48);
+            panelTop.Controls.Add(lblTitle);
+            panelTop.Dock = DockStyle.Top;
+            panelTop.Location = new Point(0, 0);
+            panelTop.Name = "panelTop";
+            panelTop.Size = new Size(1400, 60);
+            panelTop.TabIndex = 0;
+            // 
             // lblTitle
-            this.lblTitle.AutoSize = true;
-            this.lblTitle.Font = new System.Drawing.Font("Segoe UI", 14F, System.Drawing.FontStyle.Bold);
-            this.lblTitle.ForeColor = System.Drawing.Color.White;
-            this.lblTitle.Location = new System.Drawing.Point(20, 18);
-            this.lblTitle.Name = "lblTitle";
-            this.lblTitle.Size = new System.Drawing.Size(220, 25);
-            this.lblTitle.TabIndex = 0;
-            this.lblTitle.Text = "📊 Report e Statistiche";
-
+            // 
+            lblTitle.AutoSize = true;
+            lblTitle.Font = new Font("Segoe UI", 14F, FontStyle.Bold);
+            lblTitle.ForeColor = Color.White;
+            lblTitle.Location = new Point(20, 18);
+            lblTitle.Name = "lblTitle";
+            lblTitle.Size = new Size(211, 25);
+            lblTitle.TabIndex = 0;
+            lblTitle.Text = "📊 Report e Statistiche";
             // 
             // grpFilters
             // 
-            this.grpFilters.BackColor = System.Drawing.Color.White;
-            this.grpFilters.Controls.Add(this.lblDateFrom);
-            this.grpFilters.Controls.Add(this.dtpDateFrom);
-            this.grpFilters.Controls.Add(this.lblDateTo);
-            this.grpFilters.Controls.Add(this.dtpDateTo);
-            this.grpFilters.Controls.Add(this.lblClient);
-            this.grpFilters.Controls.Add(this.cmbClient);
-            this.grpFilters.Controls.Add(this.lblCampaign);
-            this.grpFilters.Controls.Add(this.cmbCampaign);
-            this.grpFilters.Controls.Add(this.btnGenerate);
-            this.grpFilters.Controls.Add(this.lblLoading);
-            this.grpFilters.Dock = System.Windows.Forms.DockStyle.Top;
-            this.grpFilters.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
-            this.grpFilters.Location = new System.Drawing.Point(0, 60);
-            this.grpFilters.Name = "grpFilters";
-            this.grpFilters.Padding = new System.Windows.Forms.Padding(10);
-            this.grpFilters.Size = new System.Drawing.Size(1400, 100);
-            this.grpFilters.TabIndex = 1;
-            this.grpFilters.TabStop = false;
-            this.grpFilters.Text = "🔍 Filtri";
-
+            grpFilters.BackColor = Color.White;
+            grpFilters.Controls.Add(lblDateFrom);
+            grpFilters.Controls.Add(dtpDateFrom);
+            grpFilters.Controls.Add(lblDateTo);
+            grpFilters.Controls.Add(dtpDateTo);
+            grpFilters.Controls.Add(lblClient);
+            grpFilters.Controls.Add(cmbClient);
+            grpFilters.Controls.Add(lblCampaign);
+            grpFilters.Controls.Add(cmbCampaign);
+            grpFilters.Controls.Add(btnGenerate);
+            grpFilters.Controls.Add(lblLoading);
+            grpFilters.Dock = DockStyle.Top;
+            grpFilters.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
+            grpFilters.Location = new Point(0, 60);
+            grpFilters.Name = "grpFilters";
+            grpFilters.Padding = new Padding(10);
+            grpFilters.Size = new Size(1400, 100);
+            grpFilters.TabIndex = 1;
+            grpFilters.TabStop = false;
+            grpFilters.Text = "🔍 Filtri";
+            // 
             // lblDateFrom
-            this.lblDateFrom.AutoSize = true;
-            this.lblDateFrom.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.lblDateFrom.Location = new System.Drawing.Point(20, 35);
-            this.lblDateFrom.Name = "lblDateFrom";
-            this.lblDateFrom.Size = new System.Drawing.Size(30, 15);
-            this.lblDateFrom.TabIndex = 0;
-            this.lblDateFrom.Text = "Dal:";
-
+            // 
+            lblDateFrom.AutoSize = true;
+            lblDateFrom.Font = new Font("Segoe UI", 9F);
+            lblDateFrom.Location = new Point(20, 35);
+            lblDateFrom.Name = "lblDateFrom";
+            lblDateFrom.Size = new Size(27, 15);
+            lblDateFrom.TabIndex = 0;
+            lblDateFrom.Text = "Dal:";
+            // 
             // dtpDateFrom
-            this.dtpDateFrom.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.dtpDateFrom.Format = System.Windows.Forms.DateTimePickerFormat.Short;
-            this.dtpDateFrom.Location = new System.Drawing.Point(60, 32);
-            this.dtpDateFrom.Name = "dtpDateFrom";
-            this.dtpDateFrom.Size = new System.Drawing.Size(120, 23);
-            this.dtpDateFrom.TabIndex = 1;
-
+            // 
+            dtpDateFrom.Font = new Font("Segoe UI", 9F);
+            dtpDateFrom.Format = DateTimePickerFormat.Short;
+            dtpDateFrom.Location = new Point(60, 32);
+            dtpDateFrom.Name = "dtpDateFrom";
+            dtpDateFrom.Size = new Size(120, 23);
+            dtpDateFrom.TabIndex = 1;
+            // 
             // lblDateTo
-            this.lblDateTo.AutoSize = true;
-            this.lblDateTo.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.lblDateTo.Location = new System.Drawing.Point(200, 35);
-            this.lblDateTo.Name = "lblDateTo";
-            this.lblDateTo.Size = new System.Drawing.Size(21, 15);
-            this.lblDateTo.TabIndex = 2;
-            this.lblDateTo.Text = "Al:";
-
+            // 
+            lblDateTo.AutoSize = true;
+            lblDateTo.Font = new Font("Segoe UI", 9F);
+            lblDateTo.Location = new Point(200, 35);
+            lblDateTo.Name = "lblDateTo";
+            lblDateTo.Size = new Size(21, 15);
+            lblDateTo.TabIndex = 2;
+            lblDateTo.Text = "Al:";
+            // 
             // dtpDateTo
-            this.dtpDateTo.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.dtpDateTo.Format = System.Windows.Forms.DateTimePickerFormat.Short;
-            this.dtpDateTo.Location = new System.Drawing.Point(230, 32);
-            this.dtpDateTo.Name = "dtpDateTo";
-            this.dtpDateTo.Size = new System.Drawing.Size(120, 23);
-            this.dtpDateTo.TabIndex = 3;
-
+            // 
+            dtpDateTo.Font = new Font("Segoe UI", 9F);
+            dtpDateTo.Format = DateTimePickerFormat.Short;
+            dtpDateTo.Location = new Point(230, 32);
+            dtpDateTo.Name = "dtpDateTo";
+            dtpDateTo.Size = new Size(120, 23);
+            dtpDateTo.TabIndex = 3;
+            // 
             // lblClient
-            this.lblClient.AutoSize = true;
-            this.lblClient.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.lblClient.Location = new System.Drawing.Point(370, 35);
-            this.lblClient.Name = "lblClient";
-            this.lblClient.Size = new System.Drawing.Size(47, 15);
-            this.lblClient.TabIndex = 4;
-            this.lblClient.Text = "Cliente:";
-
+            // 
+            lblClient.AutoSize = true;
+            lblClient.Font = new Font("Segoe UI", 9F);
+            lblClient.Location = new Point(370, 35);
+            lblClient.Name = "lblClient";
+            lblClient.Size = new Size(47, 15);
+            lblClient.TabIndex = 4;
+            lblClient.Text = "Cliente:";
+            // 
             // cmbClient
-            this.cmbClient.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.cmbClient.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.cmbClient.FormattingEnabled = true;
-            this.cmbClient.Location = new System.Drawing.Point(430, 32);
-            this.cmbClient.Name = "cmbClient";
-            this.cmbClient.Size = new System.Drawing.Size(250, 23);
-            this.cmbClient.TabIndex = 5;
-            this.cmbClient.SelectedIndexChanged += new System.EventHandler(this.cmbClient_SelectedIndexChanged);
-
+            // 
+            cmbClient.DropDownStyle = ComboBoxStyle.DropDownList;
+            cmbClient.Font = new Font("Segoe UI", 9F);
+            cmbClient.FormattingEnabled = true;
+            cmbClient.Location = new Point(430, 32);
+            cmbClient.Name = "cmbClient";
+            cmbClient.Size = new Size(250, 23);
+            cmbClient.TabIndex = 5;
+            cmbClient.SelectedIndexChanged += cmbClient_SelectedIndexChanged;
+            // 
             // lblCampaign
-            this.lblCampaign.AutoSize = true;
-            this.lblCampaign.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.lblCampaign.Location = new System.Drawing.Point(700, 35);
-            this.lblCampaign.Name = "lblCampaign";
-            this.lblCampaign.Size = new System.Drawing.Size(67, 15);
-            this.lblCampaign.TabIndex = 6;
-            this.lblCampaign.Text = "Campagna:";
-
+            // 
+            lblCampaign.AutoSize = true;
+            lblCampaign.Font = new Font("Segoe UI", 9F);
+            lblCampaign.Location = new Point(700, 35);
+            lblCampaign.Name = "lblCampaign";
+            lblCampaign.Size = new Size(68, 15);
+            lblCampaign.TabIndex = 6;
+            lblCampaign.Text = "Campagna:";
+            // 
             // cmbCampaign
-            this.cmbCampaign.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.cmbCampaign.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.cmbCampaign.FormattingEnabled = true;
-            this.cmbCampaign.Location = new System.Drawing.Point(780, 32);
-            this.cmbCampaign.Name = "cmbCampaign";
-            this.cmbCampaign.Size = new System.Drawing.Size(300, 23);
-            this.cmbCampaign.TabIndex = 7;
-
+            // 
+            cmbCampaign.DropDownStyle = ComboBoxStyle.DropDownList;
+            cmbCampaign.Font = new Font("Segoe UI", 9F);
+            cmbCampaign.FormattingEnabled = true;
+            cmbCampaign.Location = new Point(780, 32);
+            cmbCampaign.Name = "cmbCampaign";
+            cmbCampaign.Size = new Size(300, 23);
+            cmbCampaign.TabIndex = 7;
+            // 
             // btnGenerate
-            this.btnGenerate.BackColor = System.Drawing.Color.FromArgb(0, 123, 255);
-            this.btnGenerate.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnGenerate.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
-            this.btnGenerate.ForeColor = System.Drawing.Color.White;
-            this.btnGenerate.Location = new System.Drawing.Point(1100, 28);
-            this.btnGenerate.Name = "btnGenerate";
-            this.btnGenerate.Size = new System.Drawing.Size(150, 32);
-            this.btnGenerate.TabIndex = 8;
-            this.btnGenerate.Text = "📊 Genera Report";
-            this.btnGenerate.UseVisualStyleBackColor = false;
-            this.btnGenerate.Click += new System.EventHandler(this.btnGenerate_Click);
-
+            // 
+            btnGenerate.BackColor = Color.FromArgb(0, 123, 255);
+            btnGenerate.FlatStyle = FlatStyle.Flat;
+            btnGenerate.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+            btnGenerate.ForeColor = Color.White;
+            btnGenerate.Location = new Point(1100, 28);
+            btnGenerate.Name = "btnGenerate";
+            btnGenerate.Size = new Size(150, 32);
+            btnGenerate.TabIndex = 8;
+            btnGenerate.Text = "📊 Genera Report";
+            btnGenerate.UseVisualStyleBackColor = false;
+            btnGenerate.Click += btnGenerate_Click;
+            // 
             // lblLoading
-            this.lblLoading.AutoSize = true;
-            this.lblLoading.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Italic);
-            this.lblLoading.ForeColor = System.Drawing.Color.OrangeRed;
-            this.lblLoading.Location = new System.Drawing.Point(1270, 35);
-            this.lblLoading.Name = "lblLoading";
-            this.lblLoading.Size = new System.Drawing.Size(110, 19);
-            this.lblLoading.TabIndex = 9;
-            this.lblLoading.Text = "⏳ Generazione...";
-            this.lblLoading.Visible = false;
-
+            // 
+            lblLoading.AutoSize = true;
+            lblLoading.Font = new Font("Segoe UI", 10F, FontStyle.Italic);
+            lblLoading.ForeColor = Color.OrangeRed;
+            lblLoading.Location = new Point(1270, 35);
+            lblLoading.Name = "lblLoading";
+            lblLoading.Size = new Size(119, 19);
+            lblLoading.TabIndex = 9;
+            lblLoading.Text = "⏳ Generazione...";
+            lblLoading.Visible = false;
             // 
             // tabReports
             // 
-            this.tabReports.Controls.Add(this.tabStatistics);
-            this.tabReports.Controls.Add(this.tabByCampaign);
-            this.tabReports.Controls.Add(this.tabByClient);
-            this.tabReports.Controls.Add(this.tabByCategory);
-            this.tabReports.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tabReports.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.tabReports.Location = new System.Drawing.Point(0, 160);
-            this.tabReports.Name = "tabReports";
-            this.tabReports.SelectedIndex = 0;
-            this.tabReports.Size = new System.Drawing.Size(1400, 570);
-            this.tabReports.TabIndex = 2;
-
+            tabReports.Controls.Add(tabStatistics);
+            tabReports.Controls.Add(tabByCampaign);
+            tabReports.Controls.Add(tabByClient);
+            tabReports.Controls.Add(tabByCategory);
+            tabReports.Dock = DockStyle.Fill;
+            tabReports.Font = new Font("Segoe UI", 9F);
+            tabReports.Location = new Point(0, 160);
+            tabReports.Name = "tabReports";
+            tabReports.SelectedIndex = 0;
+            tabReports.Size = new Size(1400, 570);
+            tabReports.TabIndex = 2;
             // 
             // tabStatistics
             // 
-            this.tabStatistics.BackColor = System.Drawing.Color.White;
-            this.tabStatistics.Controls.Add(this.panelStatistics);
-            this.tabStatistics.Location = new System.Drawing.Point(4, 24);
-            this.tabStatistics.Name = "tabStatistics";
-            this.tabStatistics.Padding = new System.Windows.Forms.Padding(10);
-            this.tabStatistics.Size = new System.Drawing.Size(1392, 542);
-            this.tabStatistics.TabIndex = 0;
-            this.tabStatistics.Text = "📈 Statistiche";
-
+            tabStatistics.BackColor = Color.White;
+            tabStatistics.Controls.Add(panelStatistics);
+            tabStatistics.Location = new Point(4, 24);
+            tabStatistics.Name = "tabStatistics";
+            tabStatistics.Padding = new Padding(10);
+            tabStatistics.Size = new Size(1392, 542);
+            tabStatistics.TabIndex = 0;
+            tabStatistics.Text = "📈 Statistiche";
+            // 
             // panelStatistics
-            this.panelStatistics.Controls.Add(this.lblTotalDays);
-            this.panelStatistics.Controls.Add(this.lblTotalPasses);
-            this.panelStatistics.Controls.Add(this.lblTotalDuration);
-            this.panelStatistics.Controls.Add(this.lblUniqueCampaigns);
-            this.panelStatistics.Controls.Add(this.lblUniqueClients);
-            this.panelStatistics.Controls.Add(this.lblUniqueSpots);
-            this.panelStatistics.Controls.Add(this.lblAvgPassesPerDay);
-            this.panelStatistics.Controls.Add(this.lblAvgDurationPerDay);
-            this.panelStatistics.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.panelStatistics.Location = new System.Drawing.Point(10, 10);
-            this.panelStatistics.Name = "panelStatistics";
-            this.panelStatistics.Size = new System.Drawing.Size(1372, 522);
-            this.panelStatistics.TabIndex = 0;
-
-            // Statistics Labels - Layout a 2 colonne
-            int labelX1 = 50;
-            int labelX2 = 700;
-            int labelY = 50;
-            int labelSpacing = 60;
-
-            // Colonna 1
-            this.lblTotalDays.AutoSize = true;
-            this.lblTotalDays.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Bold);
-            this.lblTotalDays.Location = new System.Drawing.Point(labelX1, labelY);
-            this.lblTotalDays.Name = "lblTotalDays";
-            this.lblTotalDays.Size = new System.Drawing.Size(150, 21);
-            this.lblTotalDays.TabIndex = 0;
-            this.lblTotalDays.Text = "Giorni analizzati:  0";
-
-            this.lblTotalPasses.AutoSize = true;
-            this.lblTotalPasses.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Bold);
-            this.lblTotalPasses.Location = new System.Drawing.Point(labelX1, labelY + labelSpacing);
-            this.lblTotalPasses.Name = "lblTotalPasses";
-            this.lblTotalPasses.Size = new System.Drawing.Size(150, 21);
-            this.lblTotalPasses.TabIndex = 1;
-            this.lblTotalPasses.Text = "Passaggi totali: 0";
-
-            this.lblTotalDuration.AutoSize = true;
-            this.lblTotalDuration.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Bold);
-            this.lblTotalDuration.Location = new System.Drawing.Point(labelX1, labelY + labelSpacing * 2);
-            this.lblTotalDuration.Name = "lblTotalDuration";
-            this.lblTotalDuration.Size = new System.Drawing.Size(200, 21);
-            this.lblTotalDuration.TabIndex = 2;
-            this.lblTotalDuration.Text = "Durata totale: 00:00:00";
-
-            this.lblUniqueCampaigns.AutoSize = true;
-            this.lblUniqueCampaigns.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Bold);
-            this.lblUniqueCampaigns.Location = new System.Drawing.Point(labelX1, labelY + labelSpacing * 3);
-            this.lblUniqueCampaigns.Name = "lblUniqueCampaigns";
-            this.lblUniqueCampaigns.Size = new System.Drawing.Size(160, 21);
-            this.lblUniqueCampaigns.TabIndex = 3;
-            this.lblUniqueCampaigns.Text = "Campagne attive: 0";
-
-            // Colonna 2
-            this.lblUniqueClients.AutoSize = true;
-            this.lblUniqueClients.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Bold);
-            this.lblUniqueClients.Location = new System.Drawing.Point(labelX2, labelY);
-            this.lblUniqueClients.Name = "lblUniqueClients";
-            this.lblUniqueClients.Size = new System.Drawing.Size(130, 21);
-            this.lblUniqueClients.TabIndex = 4;
-            this.lblUniqueClients.Text = "Clienti attivi: 0";
-
-            this.lblUniqueSpots.AutoSize = true;
-            this.lblUniqueSpots.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Bold);
-            this.lblUniqueSpots.Location = new System.Drawing.Point(labelX2, labelY + labelSpacing);
-            this.lblUniqueSpots.Name = "lblUniqueSpots";
-            this.lblUniqueSpots.Size = new System.Drawing.Size(130, 21);
-            this.lblUniqueSpots.TabIndex = 5;
-            this.lblUniqueSpots.Text = "Spot diversi: 0";
-
-            this.lblAvgPassesPerDay.AutoSize = true;
-            this.lblAvgPassesPerDay.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Bold);
-            this.lblAvgPassesPerDay.Location = new System.Drawing.Point(labelX2, labelY + labelSpacing * 2);
-            this.lblAvgPassesPerDay.Name = "lblAvgPassesPerDay";
-            this.lblAvgPassesPerDay.Size = new System.Drawing.Size(230, 21);
-            this.lblAvgPassesPerDay.TabIndex = 6;
-            this.lblAvgPassesPerDay.Text = "Media passaggi/giorno: 0.0";
-
-            this.lblAvgDurationPerDay.AutoSize = true;
-            this.lblAvgDurationPerDay.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Bold);
-            this.lblAvgDurationPerDay.Location = new System.Drawing.Point(labelX2, labelY + labelSpacing * 3);
-            this.lblAvgDurationPerDay.Name = "lblAvgDurationPerDay";
-            this.lblAvgDurationPerDay.Size = new System.Drawing.Size(280, 21);
-            this.lblAvgDurationPerDay.TabIndex = 7;
-            this.lblAvgDurationPerDay.Text = "Media durata/giorno: 00:00:00";
-
+            // 
+            panelStatistics.Controls.Add(lblTotalDays);
+            panelStatistics.Controls.Add(lblTotalPasses);
+            panelStatistics.Controls.Add(lblTotalDuration);
+            panelStatistics.Controls.Add(lblUniqueCampaigns);
+            panelStatistics.Controls.Add(lblUniqueClients);
+            panelStatistics.Controls.Add(lblUniqueSpots);
+            panelStatistics.Controls.Add(lblAvgPassesPerDay);
+            panelStatistics.Controls.Add(lblAvgDurationPerDay);
+            panelStatistics.Dock = DockStyle.Fill;
+            panelStatistics.Location = new Point(10, 10);
+            panelStatistics.Name = "panelStatistics";
+            panelStatistics.Size = new Size(1372, 522);
+            panelStatistics.TabIndex = 0;
+            // 
+            // lblTotalDays
+            // 
+            lblTotalDays.AutoSize = true;
+            lblTotalDays.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
+            lblTotalDays.Location = new Point(50, 50);
+            lblTotalDays.Name = "lblTotalDays";
+            lblTotalDays.Size = new Size(156, 21);
+            lblTotalDays.TabIndex = 0;
+            lblTotalDays.Text = "Giorni analizzati:  0";
+            // 
+            // lblTotalPasses
+            // 
+            lblTotalPasses.AutoSize = true;
+            lblTotalPasses.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
+            lblTotalPasses.Location = new Point(50, 50);
+            lblTotalPasses.Name = "lblTotalPasses";
+            lblTotalPasses.Size = new Size(139, 21);
+            lblTotalPasses.TabIndex = 1;
+            lblTotalPasses.Text = "Passaggi totali: 0";
+            // 
+            // lblTotalDuration
+            // 
+            lblTotalDuration.AutoSize = true;
+            lblTotalDuration.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
+            lblTotalDuration.Location = new Point(50, 50);
+            lblTotalDuration.Name = "lblTotalDuration";
+            lblTotalDuration.Size = new Size(181, 21);
+            lblTotalDuration.TabIndex = 2;
+            lblTotalDuration.Text = "Durata totale: 00:00:00";
+            // 
+            // lblUniqueCampaigns
+            // 
+            lblUniqueCampaigns.AutoSize = true;
+            lblUniqueCampaigns.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
+            lblUniqueCampaigns.Location = new Point(50, 50);
+            lblUniqueCampaigns.Name = "lblUniqueCampaigns";
+            lblUniqueCampaigns.Size = new Size(157, 21);
+            lblUniqueCampaigns.TabIndex = 3;
+            lblUniqueCampaigns.Text = "Campagne attive: 0";
+            // 
+            // lblUniqueClients
+            // 
+            lblUniqueClients.AutoSize = true;
+            lblUniqueClients.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
+            lblUniqueClients.Location = new Point(700, 50);
+            lblUniqueClients.Name = "lblUniqueClients";
+            lblUniqueClients.Size = new Size(121, 21);
+            lblUniqueClients.TabIndex = 4;
+            lblUniqueClients.Text = "Clienti attivi: 0";
+            // 
+            // lblUniqueSpots
+            // 
+            lblUniqueSpots.AutoSize = true;
+            lblUniqueSpots.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
+            lblUniqueSpots.Location = new Point(700, 50);
+            lblUniqueSpots.Name = "lblUniqueSpots";
+            lblUniqueSpots.Size = new Size(117, 21);
+            lblUniqueSpots.TabIndex = 5;
+            lblUniqueSpots.Text = "Spot diversi: 0";
+            // 
+            // lblAvgPassesPerDay
+            // 
+            lblAvgPassesPerDay.AutoSize = true;
+            lblAvgPassesPerDay.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
+            lblAvgPassesPerDay.Location = new Point(700, 50);
+            lblAvgPassesPerDay.Name = "lblAvgPassesPerDay";
+            lblAvgPassesPerDay.Size = new Size(217, 21);
+            lblAvgPassesPerDay.TabIndex = 6;
+            lblAvgPassesPerDay.Text = "Media passaggi/giorno: 0.0";
+            // 
+            // lblAvgDurationPerDay
+            // 
+            lblAvgDurationPerDay.AutoSize = true;
+            lblAvgDurationPerDay.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
+            lblAvgDurationPerDay.Location = new Point(700, 50);
+            lblAvgDurationPerDay.Name = "lblAvgDurationPerDay";
+            lblAvgDurationPerDay.Size = new Size(240, 21);
+            lblAvgDurationPerDay.TabIndex = 7;
+            lblAvgDurationPerDay.Text = "Media durata/giorno: 00:00:00";
             // 
             // tabByCampaign
             // 
-            this.tabByCampaign.BackColor = System.Drawing.Color.White;
-            this.tabByCampaign.Controls.Add(this.dgvCampaigns);
-            this.tabByCampaign.Location = new System.Drawing.Point(4, 24);
-            this.tabByCampaign.Name = "tabByCampaign";
-            this.tabByCampaign.Padding = new System.Windows.Forms.Padding(10);
-            this.tabByCampaign.Size = new System.Drawing.Size(1392, 542);
-            this.tabByCampaign.TabIndex = 1;
-            this.tabByCampaign.Text = "📋 Per Campagna";
-
+            tabByCampaign.BackColor = Color.White;
+            tabByCampaign.Controls.Add(dgvCampaigns);
+            tabByCampaign.Location = new Point(4, 24);
+            tabByCampaign.Name = "tabByCampaign";
+            tabByCampaign.Padding = new Padding(10);
+            tabByCampaign.Size = new Size(1392, 542);
+            tabByCampaign.TabIndex = 1;
+            tabByCampaign.Text = "📋 Per Campagna";
+            // 
             // dgvCampaigns
-            this.dgvCampaigns.BackgroundColor = System.Drawing.Color.White;
-            this.dgvCampaigns.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.dgvCampaigns.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.dgvCampaigns.Location = new System.Drawing.Point(10, 10);
-            this.dgvCampaigns.Name = "dgvCampaigns";
-            this.dgvCampaigns.RowTemplate.Height = 25;
-            this.dgvCampaigns.Size = new System.Drawing.Size(1372, 522);
-            this.dgvCampaigns.TabIndex = 0;
-
+            // 
+            dgvCampaigns.BackgroundColor = Color.White;
+            dataGridViewCellStyle1.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle1.BackColor = SystemColors.Control;
+            dataGridViewCellStyle1.Font = new Font("Segoe UI", 9F);
+            dataGridViewCellStyle1.ForeColor = SystemColors.WindowText;
+            dataGridViewCellStyle1.SelectionBackColor = SystemColors.Highlight;
+            dataGridViewCellStyle1.SelectionForeColor = SystemColors.HighlightText;
+            dataGridViewCellStyle1.WrapMode = DataGridViewTriState.True;
+            dgvCampaigns.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
+            dgvCampaigns.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            dataGridViewCellStyle2.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle2.BackColor = SystemColors.Window;
+            dataGridViewCellStyle2.Font = new Font("Segoe UI", 9F);
+            dataGridViewCellStyle2.ForeColor = SystemColors.ControlText;
+            dataGridViewCellStyle2.SelectionBackColor = SystemColors.Highlight;
+            dataGridViewCellStyle2.SelectionForeColor = SystemColors.HighlightText;
+            dataGridViewCellStyle2.WrapMode = DataGridViewTriState.False;
+            dgvCampaigns.DefaultCellStyle = dataGridViewCellStyle2;
+            dgvCampaigns.Dock = DockStyle.Fill;
+            dgvCampaigns.Location = new Point(10, 10);
+            dgvCampaigns.Name = "dgvCampaigns";
+            dgvCampaigns.Size = new Size(1372, 522);
+            dgvCampaigns.TabIndex = 0;
             // 
             // tabByClient
             // 
-            this.tabByClient.BackColor = System.Drawing.Color.White;
-            this.tabByClient.Controls.Add(this.dgvClients);
-            this.tabByClient.Location = new System.Drawing.Point(4, 24);
-            this.tabByClient.Name = "tabByClient";
-            this.tabByClient.Padding = new System.Windows.Forms.Padding(10);
-            this.tabByClient.Size = new System.Drawing.Size(1392, 542);
-            this.tabByClient.TabIndex = 2;
-            this.tabByClient.Text = "👥 Per Cliente";
-
+            tabByClient.BackColor = Color.White;
+            tabByClient.Controls.Add(dgvClients);
+            tabByClient.Location = new Point(4, 24);
+            tabByClient.Name = "tabByClient";
+            tabByClient.Padding = new Padding(10);
+            tabByClient.Size = new Size(1392, 542);
+            tabByClient.TabIndex = 2;
+            tabByClient.Text = "👥 Per Cliente";
+            // 
             // dgvClients
-            this.dgvClients.BackgroundColor = System.Drawing.Color.White;
-            this.dgvClients.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.dgvClients.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.dgvClients.Location = new System.Drawing.Point(10, 10);
-            this.dgvClients.Name = "dgvClients";
-            this.dgvClients.RowTemplate.Height = 25;
-            this.dgvClients.Size = new System.Drawing.Size(1372, 522);
-            this.dgvClients.TabIndex = 0;
-
+            // 
+            dgvClients.BackgroundColor = Color.White;
+            dataGridViewCellStyle3.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle3.BackColor = SystemColors.Control;
+            dataGridViewCellStyle3.Font = new Font("Segoe UI", 9F);
+            dataGridViewCellStyle3.ForeColor = SystemColors.WindowText;
+            dataGridViewCellStyle3.SelectionBackColor = SystemColors.Highlight;
+            dataGridViewCellStyle3.SelectionForeColor = SystemColors.HighlightText;
+            dataGridViewCellStyle3.WrapMode = DataGridViewTriState.True;
+            dgvClients.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle3;
+            dgvClients.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            dataGridViewCellStyle4.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle4.BackColor = SystemColors.Window;
+            dataGridViewCellStyle4.Font = new Font("Segoe UI", 9F);
+            dataGridViewCellStyle4.ForeColor = SystemColors.ControlText;
+            dataGridViewCellStyle4.SelectionBackColor = SystemColors.Highlight;
+            dataGridViewCellStyle4.SelectionForeColor = SystemColors.HighlightText;
+            dataGridViewCellStyle4.WrapMode = DataGridViewTriState.False;
+            dgvClients.DefaultCellStyle = dataGridViewCellStyle4;
+            dgvClients.Dock = DockStyle.Fill;
+            dgvClients.Location = new Point(10, 10);
+            dgvClients.Name = "dgvClients";
+            dgvClients.Size = new Size(1372, 522);
+            dgvClients.TabIndex = 0;
             // 
             // tabByCategory
             // 
-            this.tabByCategory.BackColor = System.Drawing.Color.White;
-            this.tabByCategory.Controls.Add(this.dgvCategories);
-            this.tabByCategory.Location = new System.Drawing.Point(4, 24);
-            this.tabByCategory.Name = "tabByCategory";
-            this.tabByCategory.Padding = new System.Windows.Forms.Padding(10);
-            this.tabByCategory.Size = new System.Drawing.Size(1392, 542);
-            this.tabByCategory.TabIndex = 3;
-            this.tabByCategory.Text = "🏷️ Per Categoria";
-
+            tabByCategory.BackColor = Color.White;
+            tabByCategory.Controls.Add(dgvCategories);
+            tabByCategory.Location = new Point(4, 24);
+            tabByCategory.Name = "tabByCategory";
+            tabByCategory.Padding = new Padding(10);
+            tabByCategory.Size = new Size(1392, 542);
+            tabByCategory.TabIndex = 3;
+            tabByCategory.Text = "🏷️ Per Categoria";
+            // 
             // dgvCategories
-            this.dgvCategories.BackgroundColor = System.Drawing.Color.White;
-            this.dgvCategories.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.dgvCategories.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.dgvCategories.Location = new System.Drawing.Point(10, 10);
-            this.dgvCategories.Name = "dgvCategories";
-            this.dgvCategories.RowTemplate.Height = 25;
-            this.dgvCategories.Size = new System.Drawing.Size(1372, 522);
-            this.dgvCategories.TabIndex = 0;
-
+            // 
+            dgvCategories.BackgroundColor = Color.White;
+            dataGridViewCellStyle5.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle5.BackColor = SystemColors.Control;
+            dataGridViewCellStyle5.Font = new Font("Segoe UI", 9F);
+            dataGridViewCellStyle5.ForeColor = SystemColors.WindowText;
+            dataGridViewCellStyle5.SelectionBackColor = SystemColors.Highlight;
+            dataGridViewCellStyle5.SelectionForeColor = SystemColors.HighlightText;
+            dataGridViewCellStyle5.WrapMode = DataGridViewTriState.True;
+            dgvCategories.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle5;
+            dgvCategories.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            dataGridViewCellStyle6.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle6.BackColor = SystemColors.Window;
+            dataGridViewCellStyle6.Font = new Font("Segoe UI", 9F);
+            dataGridViewCellStyle6.ForeColor = SystemColors.ControlText;
+            dataGridViewCellStyle6.SelectionBackColor = SystemColors.Highlight;
+            dataGridViewCellStyle6.SelectionForeColor = SystemColors.HighlightText;
+            dataGridViewCellStyle6.WrapMode = DataGridViewTriState.False;
+            dgvCategories.DefaultCellStyle = dataGridViewCellStyle6;
+            dgvCategories.Dock = DockStyle.Fill;
+            dgvCategories.Location = new Point(10, 10);
+            dgvCategories.Name = "dgvCategories";
+            dgvCategories.Size = new Size(1372, 522);
+            dgvCategories.TabIndex = 0;
             // 
             // panelBottom
             // 
-            this.panelBottom.BackColor = System.Drawing.Color.FromArgb(240, 240, 240);
-            this.panelBottom.Controls.Add(this.btnExportPdf);
-            this.panelBottom.Controls.Add(this.btnExportCsv);
-            this.panelBottom.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.panelBottom.Location = new System.Drawing.Point(0, 730);
-            this.panelBottom.Name = "panelBottom";
-            this.panelBottom.Size = new System.Drawing.Size(1400, 70);
-            this.panelBottom.TabIndex = 3;
-
+            panelBottom.BackColor = Color.FromArgb(240, 240, 240);
+            panelBottom.Controls.Add(btnExportPdf);
+            panelBottom.Controls.Add(btnExportCsv);
+            panelBottom.Dock = DockStyle.Bottom;
+            panelBottom.Location = new Point(0, 730);
+            panelBottom.Name = "panelBottom";
+            panelBottom.Size = new Size(1400, 70);
+            panelBottom.TabIndex = 3;
+            // 
             // btnExportPdf
-            this.btnExportPdf.BackColor = System.Drawing.Color.FromArgb(220, 53, 69);
-            this.btnExportPdf.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnExportPdf.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
-            this.btnExportPdf.ForeColor = System.Drawing.Color.White;
-            this.btnExportPdf.Location = new System.Drawing.Point(1050, 15);
-            this.btnExportPdf.Name = "btnExportPdf";
-            this.btnExportPdf.Size = new System.Drawing.Size(150, 40);
-            this.btnExportPdf.TabIndex = 0;
-            this.btnExportPdf.Text = "📄 Esporta PDF";
-            this.btnExportPdf.UseVisualStyleBackColor = false;
-            this.btnExportPdf.Click += new System.EventHandler(this.btnExportPdf_Click);
-
+            // 
+            btnExportPdf.BackColor = Color.FromArgb(220, 53, 69);
+            btnExportPdf.FlatStyle = FlatStyle.Flat;
+            btnExportPdf.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
+            btnExportPdf.ForeColor = Color.White;
+            btnExportPdf.Location = new Point(1050, 15);
+            btnExportPdf.Name = "btnExportPdf";
+            btnExportPdf.Size = new Size(150, 40);
+            btnExportPdf.TabIndex = 0;
+            btnExportPdf.Text = "📄 Esporta PDF";
+            btnExportPdf.UseVisualStyleBackColor = false;
+            btnExportPdf.Click += btnExportPdf_Click;
+            // 
             // btnExportCsv
-            this.btnExportCsv.BackColor = System.Drawing.Color.FromArgb(40, 167, 69);
-            this.btnExportCsv.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnExportCsv.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
-            this.btnExportCsv.ForeColor = System.Drawing.Color.White;
-            this.btnExportCsv.Location = new System.Drawing.Point(1220, 15);
-            this.btnExportCsv.Name = "btnExportCsv";
-            this.btnExportCsv.Size = new System.Drawing.Size(150, 40);
-            this.btnExportCsv.TabIndex = 1;
-            this.btnExportCsv.Text = "📊 Esporta CSV";
-            this.btnExportCsv.UseVisualStyleBackColor = false;
-            this.btnExportCsv.Click += new System.EventHandler(this.btnExportCsv_Click);
-
+            // 
+            btnExportCsv.BackColor = Color.FromArgb(40, 167, 69);
+            btnExportCsv.FlatStyle = FlatStyle.Flat;
+            btnExportCsv.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
+            btnExportCsv.ForeColor = Color.White;
+            btnExportCsv.Location = new Point(1220, 15);
+            btnExportCsv.Name = "btnExportCsv";
+            btnExportCsv.Size = new Size(150, 40);
+            btnExportCsv.TabIndex = 1;
+            btnExportCsv.Text = "📊 Esporta CSV";
+            btnExportCsv.UseVisualStyleBackColor = false;
+            btnExportCsv.Click += btnExportCsv_Click;
             // 
             // ReportForm
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1400, 800);
-            this.Controls.Add(this.tabReports);
-            this.Controls.Add(this.grpFilters);
-            this.Controls.Add(this.panelTop);
-            this.Controls.Add(this.panelBottom);
-            this.Name = "ReportForm";
-            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "📊 Report e Statistiche";
-
-            this.panelTop.ResumeLayout(false);
-            this.panelTop.PerformLayout();
-            this.grpFilters.ResumeLayout(false);
-            this.grpFilters.PerformLayout();
-            this.tabReports.ResumeLayout(false);
-            this.tabStatistics.ResumeLayout(false);
-            this.tabByCampaign.ResumeLayout(false);
-            this.tabByClient.ResumeLayout(false);
-            this.tabByCategory.ResumeLayout(false);
-            this.panelStatistics.ResumeLayout(false);
-            this.panelStatistics.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.dgvCampaigns)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.dgvClients)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.dgvCategories)).EndInit();
-            this.panelBottom.ResumeLayout(false);
-            this.ResumeLayout(false);
+            AutoScaleDimensions = new SizeF(7F, 15F);
+            AutoScaleMode = AutoScaleMode.Font;
+            ClientSize = new Size(1400, 800);
+            Controls.Add(tabReports);
+            Controls.Add(grpFilters);
+            Controls.Add(panelTop);
+            Controls.Add(panelBottom);
+            Icon = (Icon)resources.GetObject("$this.Icon");
+            Name = "ReportForm";
+            StartPosition = FormStartPosition.CenterScreen;
+            Text = "📊 Report e Statistiche";
+            panelTop.ResumeLayout(false);
+            panelTop.PerformLayout();
+            grpFilters.ResumeLayout(false);
+            grpFilters.PerformLayout();
+            tabReports.ResumeLayout(false);
+            tabStatistics.ResumeLayout(false);
+            panelStatistics.ResumeLayout(false);
+            panelStatistics.PerformLayout();
+            tabByCampaign.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)dgvCampaigns).EndInit();
+            tabByClient.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)dgvClients).EndInit();
+            tabByCategory.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)dgvCategories).EndInit();
+            panelBottom.ResumeLayout(false);
+            ResumeLayout(false);
         }
     }
 }
