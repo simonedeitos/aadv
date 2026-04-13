@@ -63,7 +63,7 @@ namespace AirADV.Services
                 }
 
                 // ✅ NUOVO: Genera con memoria orari del giorno precedente per evitare ripetizioni
-                List<string> previousDaySlots = new List<string>();
+                HashSet<string> previousDaySlots = new HashSet<string>();
                 int totalDays = 0;
 
                 for (DateTime date = campaign.StartDate.Date; date <= campaign.EndDate.Date; date = date.AddDays(1))
@@ -130,7 +130,7 @@ namespace AirADV.Services
 
                     result.Add(dailySchedule);
                     // Salva gli orari usati oggi per il confronto domani
-                    previousDaySlots = dailySchedule.TimeSlots.ToList();
+                    previousDaySlots = new HashSet<string>(dailySchedule.TimeSlots);
                     totalDays++;
                 }
 

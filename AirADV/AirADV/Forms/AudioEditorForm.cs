@@ -527,29 +527,19 @@ namespace AirADV.Forms
                 string tempPath = _filePath + ".tmp";
                 float gainLinear = (float)Math.Pow(10.0, _gainDb / 20.0);
 
-                // Applica gain ai samples prima di salvare
-                float[] outputSamples = _gainDb != 0
-                    ? _samples.Select(s => Math.Max(-1f, Math.Min(1f, s * gainLinear))).ToArray()
-                    : _samples;
+                // Applica gain ai samples prima di salvare (in-place quando possibile)
+                float[] outputSamples = _samples;
+                if (_gainDb != 0)
+                {
+                    outputSamples = new float[_samples.Length];
+                    for (int i = 0; i < _samples.Length; i++)
+                        outputSamples[i] = Math.Max(-1f, Math.Min(1f, _samples[i] * gainLinear));
+                }
 
-                // Scrivi come file WAV
-                string outputPath;
-                string ext = Path.GetExtension(_filePath).ToLowerInvariant();
-                if (ext == ".wav")
-                {
-                    outputPath = _filePath;
-                    WriteSamplesToWav(tempPath, outputSamples);
-                    File.Delete(outputPath);
-                    File.Move(tempPath, outputPath);
-                }
-                else
-                {
-                    // Per formati non-WAV: salva come WAV con estensione originale mantenuta
-                    outputPath = _filePath;
-                    WriteSamplesToWav(tempPath, outputSamples);
-                    File.Delete(outputPath);
-                    File.Move(tempPath, outputPath);
-                }
+                // Scrivi il file tramite un file temporaneo e sostituisci l'originale
+                WriteSamplesToWav(tempPath, outputSamples);
+                File.Delete(_filePath);
+                File.Move(tempPath, _filePath);
 
                 // Aggiorna i samples con il gain applicato
                 _samples = outputSamples;
