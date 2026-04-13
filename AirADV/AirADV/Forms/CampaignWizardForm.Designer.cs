@@ -21,6 +21,7 @@
         private System.Windows.Forms.Label lblSpotCount;
         private System.Windows.Forms.Label lblCategory;
         private System.Windows.Forms.ComboBox cmbCategory;
+        private System.Windows.Forms.Button btnAddCategory;
         private System.Windows.Forms.GroupBox grpPeriod;
         private System.Windows.Forms.Label lblStartDate;
         private System.Windows.Forms.DateTimePicker dtpStartDate;
@@ -190,6 +191,7 @@
             pnlStep1.Controls.Add(lblSpotCount);
             pnlStep1.Controls.Add(lblCategory);
             pnlStep1.Controls.Add(cmbCategory);
+            pnlStep1.Controls.Add(btnAddCategory);
             pnlStep1.Controls.Add(grpPeriod);
             pnlStep1.Location = new Point(20, 20);
             pnlStep1.Name = "pnlStep1";
@@ -355,8 +357,23 @@
             cmbCategory.FormattingEnabled = true;
             cmbCategory.Location = new Point(709, 102);
             cmbCategory.Name = "cmbCategory";
-            cmbCategory.Size = new Size(300, 25);
+            cmbCategory.Size = new Size(265, 25);
             cmbCategory.TabIndex = 14;
+            // 
+            // btnAddCategory
+            // 
+            btnAddCategory.BackColor = Color.FromArgb(40, 167, 69);
+            btnAddCategory.FlatAppearance.BorderSize = 0;
+            btnAddCategory.FlatStyle = FlatStyle.Flat;
+            btnAddCategory.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
+            btnAddCategory.ForeColor = Color.White;
+            btnAddCategory.Location = new Point(977, 102);
+            btnAddCategory.Name = "btnAddCategory";
+            btnAddCategory.Size = new Size(32, 25);
+            btnAddCategory.TabIndex = 15;
+            btnAddCategory.Text = "➕";
+            btnAddCategory.UseVisualStyleBackColor = false;
+            btnAddCategory.Click += btnAddCategory_Click;
             // 
             // grpPeriod
             // 
