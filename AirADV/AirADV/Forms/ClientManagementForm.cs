@@ -340,6 +340,18 @@ namespace AirADV.Forms
 
             dgvSpots.CellContentClick += DgvSpots_CellContentClick;
             dgvSpots.SelectionChanged += DgvSpots_SelectionChanged;
+
+            // ✅ Context menu tasto destro su spot
+            var ctxSpots = new ContextMenuStrip();
+            var mnuPlaySpot = new ToolStripMenuItem(LanguageManager.Get("ClientManagement.CtxPlaySpot", "▶ Riproduci"));
+            var mnuOpenFolder = new ToolStripMenuItem(LanguageManager.Get("ClientManagement.CtxOpenFolder", "📁 Apri cartella file"));
+            var mnuDeleteSpot = new ToolStripMenuItem(LanguageManager.Get("ClientManagement.CtxDeleteSpot", "🗑️ Elimina Spot"));
+            mnuPlaySpot.Click += (s, e) => btnPlaySpot_Click(s, e);
+            mnuOpenFolder.Click += MnuOpenSpotFolder_Click;
+            mnuDeleteSpot.Click += (s, e) => btnDeleteSpot_Click(s, e);
+            ctxSpots.Items.AddRange(new ToolStripItem[] { mnuPlaySpot, mnuOpenFolder, new ToolStripSeparator(), mnuDeleteSpot });
+            ctxSpots.Opening += (s, e) => e.Cancel = dgvSpots.SelectedRows.Count == 0;
+            dgvSpots.ContextMenuStrip = ctxSpots;
         }
 
         private void SetupCampaignsGrid()
@@ -892,6 +904,9 @@ namespace AirADV.Forms
                 );
 
                 LoadClients();
+
+                // ✅ Dopo salvataggio, naviga al tab Spot
+                tabClientDetails.SelectedTab = tabSpots;
             }
             catch (Exception ex)
             {
@@ -997,6 +1012,14 @@ namespace AirADV.Forms
                     DbcManager.Save("ADV_Spots.dbc", allSpots);
                     LoadClientSpots(_selectedClient.ID);
 
+                    // ✅ Auto-seleziona primo spot per attivare l'anteprima
+                    if (dgvSpots.Rows.Count > 0)
+                    {
+                        dgvSpots.ClearSelection();
+                        dgvSpots.Rows[0].Selected = true;
+                        dgvSpots.CurrentCell = dgvSpots.Rows[0].Cells[0];
+                    }
+
                     MessageBox.Show(
                         string.Format(
                             LanguageManager.Get("ClientManagement.SpotsImported", "✅ Importati {0} spot! "),
@@ -1033,6 +1056,27 @@ namespace AirADV.Forms
                 allSpots.RemoveAll(s => s.ID == spot.ID);
                 DbcManager.Save("ADV_Spots.dbc", allSpots);
                 LoadClientSpots(_selectedClient.ID);
+            }
+        }
+
+        private void MnuOpenSpotFolder_Click(object sender, EventArgs e)
+        {
+            if (dgvSpots.SelectedRows.Count == 0) return;
+
+            var spot = dgvSpots.SelectedRows[0].Tag as DbcManager.Spot;
+            if (spot == null || string.IsNullOrEmpty(spot.FilePath)) return;
+
+            try
+            {
+                string folder = Path.GetDirectoryName(spot.FilePath);
+                if (!string.IsNullOrEmpty(folder) && Directory.Exists(folder))
+                {
+                    System.Diagnostics.Process.Start("explorer.exe", $"/select,\"{spot.FilePath}\"");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ClientManagement] Errore apertura cartella: {ex.Message}");
             }
         }
 

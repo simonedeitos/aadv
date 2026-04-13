@@ -3,12 +3,15 @@ using AirADV.Services;
 using AirADV.Services.Licensing;
 using AirADV.Services.Localization;
 using System;
+using System.Threading;
 using System.Windows.Forms;
 
 namespace AirADV
 {
     internal static class Program
     {
+        private const string MUTEX_NAME = "Global\\AirADV_SingleInstance_F7A2B3C4";
+
         [STAThread]
         static void Main()
         {
@@ -16,6 +19,26 @@ namespace AirADV
             Application.SetCompatibleTextRenderingDefault(false);
             Application.SetHighDpiMode(HighDpiMode.SystemAware);
 
+            // ✅ Single-instance check con Mutex
+            using (var mutex = new Mutex(true, MUTEX_NAME, out bool createdNew))
+            {
+                if (!createdNew)
+                {
+                    MessageBox.Show(
+                        "AirADV è già in esecuzione.\n\nAirADV is already running.",
+                        "AirADV",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Information
+                    );
+                    return;
+                }
+
+                RunApplication();
+            }
+        }
+
+        private static void RunApplication()
+        {
             try
             {
                 Console.WriteLine("═══════════════════════════════════════════════");
