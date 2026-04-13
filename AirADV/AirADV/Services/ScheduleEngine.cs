@@ -109,16 +109,23 @@ namespace AirADV.Services
                     }
 
                     // ✅ Distribuisci passaggi
-                    if (repeatedSlots != null)
+                    if (distributePasses && campaign.DistributionMode != "AUDIENCE")
                     {
-                        // Caso fallback avoidRepetition: distribuisci prima i non-ripetuti,
-                        // poi completa con i ripetuti scegliendo quelli più distanti dagli orari già assegnati.
+                        // BALANCED/DEFAULT: distribuisce SEMPRE su TUTTA la fascia oraria (validSlots),
+                        // con preferenza anti-ripetizione applicata per-bucket internamente a DistributeBalanced.
+                        HashSet<string>? pdSlots = avoidRepetition && previousDaySlots.Count > 0 ? previousDaySlots : null;
+                        dailySchedule.TimeSlots = DistributeBalanced(validSlots, campaign.DailyPasses, pdSlots);
+                        if (pdSlots != null)
+                            Console.WriteLine($"[ScheduleEngine] Distribuzione BILANCIATA su fascia completa con preferenza anti-ripetizione");
+                    }
+                    else if (repeatedSlots != null)
+                    {
+                        // Fallback avoidRepetition (AUDIENCE con slot insufficienti, o distributePasses=false):
+                        // priorità agli slot non-ripetuti, completamento con i ripetuti più distanti.
                         List<string> primary;
                         if (distributePasses && slotsForToday.Count > 0)
                         {
-                            primary = campaign.DistributionMode == "AUDIENCE"
-                                ? DistributeByAudience(slotsForToday, slotsForToday.Count)
-                                : DistributeBalanced(slotsForToday, slotsForToday.Count);
+                            primary = DistributeByAudience(slotsForToday, slotsForToday.Count);
                         }
                         else
                         {
@@ -153,25 +160,14 @@ namespace AirADV.Services
 
                         Console.WriteLine($"[ScheduleEngine] Fallback avoidRepetition: {primary.Count} slot non-ripetuti + {needed - primary.Count} ripetuti (più distanti)");
                     }
-                    else if (distributePasses)
+                    else if (distributePasses && campaign.DistributionMode == "AUDIENCE")
                     {
-                        // Distribuzione uniforme lungo tutta la giornata
-                        if (campaign.DistributionMode == "BALANCED")
-                        {
-                            dailySchedule.TimeSlots = DistributeBalanced(slotsForToday, campaign.DailyPasses);
-                        }
-                        else if (campaign.DistributionMode == "AUDIENCE")
-                        {
-                            dailySchedule.TimeSlots = DistributeByAudience(slotsForToday, campaign.DailyPasses);
-                        }
-                        else
-                        {
-                            dailySchedule.TimeSlots = DistributeBalanced(slotsForToday, campaign.DailyPasses);
-                        }
+                        // AUDIENCE mode con avoidRepetition e slot sufficienti (o avoidRepetition=false)
+                        dailySchedule.TimeSlots = DistributeByAudience(slotsForToday, campaign.DailyPasses);
                     }
                     else
                     {
-                        // Senza distribuzione:  prendi i primi N slot disponibili
+                        // Senza distribuzione: prendi i primi N slot disponibili (già filtrati per avoidRepetition)
                         dailySchedule.TimeSlots = slotsForToday
                             .Take(Math.Min(campaign.DailyPasses, slotsForToday.Count))
                             .Select(s => s.SlotTime)
@@ -246,9 +242,11 @@ namespace AirADV.Services
         // ═══════════════════════════════════════════════════════════
 
         /// <summary>
-        /// ✅ MIGLIORATO: Distribuzione bilanciata con algoritmo più preciso
+        /// ✅ MIGLIORATO: Distribuzione bilanciata con algoritmo bucket-center.
+        /// Quando previousDaySlots è fornito, preferisce slot non usati ieri in ogni bucket,
+        /// garantendo sempre distribuzione uniforme sull'intera fascia oraria.
         /// </summary>
-        private List<string> DistributeBalanced(List<DbcManager.TimeSlot> slots, int passes)
+        private List<string> DistributeBalanced(List<DbcManager.TimeSlot> slots, int passes, HashSet<string>? previousDaySlots = null)
         {
             var result = new List<string>();
 
@@ -265,16 +263,44 @@ namespace AirADV.Services
             }
             else
             {
-                // ✅ ALGORITMO BUCKET-CENTER: seleziona il centro di ciascun bucket equidistante
-                // Divide i slot in effectivePasses bucket di dimensione uguale e prende il centro di ognuno.
-                // step >= 1 garantisce bucket distinti → nessuna collisione, nessun raggruppamento.
+                // ALGORITMO BUCKET-CENTER: divide i slot in N bucket uguali e seleziona il centro di ognuno.
+                // effectivePasses <= slots.Count garantisce step >= 1 → bucket distinti, distribuzione uniforme.
                 double step = (double)slots.Count / effectivePasses;
 
                 for (int i = 0; i < effectivePasses; i++)
                 {
-                    int index = (int)(step * i + step / 2.0);
-                    index = Math.Min(index, slots.Count - 1);
-                    result.Add(slots[index].SlotTime);
+                    int center = Math.Min((int)(step * i + step / 2.0), slots.Count - 1);
+
+                    if (previousDaySlots != null && previousDaySlots.Count > 0)
+                    {
+                        // Confini del bucket per questo passaggio
+                        int bucketStart = (int)(step * i);
+                        int bucketEnd = i < effectivePasses - 1
+                            ? Math.Max((int)(step * (i + 1)) - 1, bucketStart)
+                            : slots.Count - 1;
+
+                        // Cerca lo slot non-ripetuto più vicino al centro del bucket
+                        int bestIdx = -1;
+                        int bestDist = int.MaxValue;
+                        for (int j = bucketStart; j <= bucketEnd; j++)
+                        {
+                            if (!previousDaySlots.Contains(slots[j].SlotTime))
+                            {
+                                int dist = Math.Abs(j - center);
+                                if (dist < bestDist)
+                                {
+                                    bestDist = dist;
+                                    bestIdx = j;
+                                }
+                            }
+                        }
+                        // Se tutti gli slot del bucket erano usati ieri, usa il centro (ripetuto)
+                        result.Add(slots[bestIdx >= 0 ? bestIdx : center].SlotTime);
+                    }
+                    else
+                    {
+                        result.Add(slots[center].SlotTime);
+                    }
                 }
 
                 // Ordina per orario crescente
