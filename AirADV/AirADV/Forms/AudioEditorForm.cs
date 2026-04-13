@@ -229,7 +229,7 @@ namespace AirADV.Forms
                 pnlVideo = new Panel
                 {
                     Dock = DockStyle.Top,
-                    Height = 160,
+                    Height = 200,
                     BackColor = Color.Black
                 };
                 this.Controls.Add(pnlVideo);
@@ -499,6 +499,16 @@ namespace AirADV.Forms
 
                 var media = new Media(_libVLC, new Uri(_filePath));
                 _vlcPlayer.Media = media;
+
+                // Avvia e metti subito in pausa per mostrare il primo frame come anteprima statica
+                EventHandler<EventArgs> onPlaying = null;
+                onPlaying = (s, ev) =>
+                {
+                    _vlcPlayer.Playing -= onPlaying;
+                    _vlcPlayer.SetPause(true);
+                };
+                _vlcPlayer.Playing += onPlaying;
+                _vlcPlayer.Play();
 
                 lblStatus.Text = $"📺 {Path.GetFileName(_filePath)}";
                 this.Text = LanguageManager.Get("AudioEditor.VideoPreviewTitle", "📺 Preview Video")
@@ -897,10 +907,31 @@ namespace AirADV.Forms
             try
             {
                 _vlcPlayer?.Stop();
-                _vlcPlayer?.Dispose();
-                _libVLC?.Dispose();
             }
-            catch { }
+            catch (Exception ex) { Console.WriteLine($"[AudioEditor] Stop VLC: {ex.Message}"); }
+            try
+            {
+                if (_videoView != null)
+                {
+                    pnlVideo?.Controls.Remove(_videoView);
+                    _videoView.MediaPlayer = null;
+                    _videoView.Dispose();
+                    _videoView = null;
+                }
+            }
+            catch (Exception ex) { Console.WriteLine($"[AudioEditor] Dispose VideoView: {ex.Message}"); }
+            try
+            {
+                _vlcPlayer?.Dispose();
+                _vlcPlayer = null;
+            }
+            catch (Exception ex) { Console.WriteLine($"[AudioEditor] Dispose MediaPlayer: {ex.Message}"); }
+            try
+            {
+                _libVLC?.Dispose();
+                _libVLC = null;
+            }
+            catch (Exception ex) { Console.WriteLine($"[AudioEditor] Dispose LibVLC: {ex.Message}"); }
         }
     }
 }
