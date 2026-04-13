@@ -1180,13 +1180,20 @@ namespace AirADV.Forms
                     if (editorForm.FileWasModified)
                     {
                         // Aggiorna la durata dello spot nel database
-                        spot.Duration = AudioManager.GetDuration(spot.FilePath);
-                        var allSpots = DbcManager.Load<DbcManager.Spot>("ADV_Spots.dbc");
-                        var existing = allSpots.FirstOrDefault(s => s.ID == spot.ID);
-                        if (existing != null)
+                        try
                         {
-                            existing.Duration = spot.Duration;
-                            DbcManager.Save("ADV_Spots.dbc", allSpots);
+                            spot.Duration = AudioManager.GetDuration(spot.FilePath);
+                            var allSpots = DbcManager.Load<DbcManager.Spot>("ADV_Spots.dbc");
+                            var existing = allSpots.FirstOrDefault(s => s.ID == spot.ID);
+                            if (existing != null)
+                            {
+                                existing.Duration = spot.Duration;
+                                DbcManager.Save("ADV_Spots.dbc", allSpots);
+                            }
+                        }
+                        catch (Exception durEx)
+                        {
+                            Console.WriteLine($"[ClientManagement] Errore aggiornamento durata spot: {durEx.Message}");
                         }
                     }
                 }

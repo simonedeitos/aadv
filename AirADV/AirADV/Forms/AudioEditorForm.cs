@@ -925,7 +925,7 @@ namespace AirADV.Forms
                 {
                     // Ci sono porzioni eliminate: usa WAV temporaneo dai campioni modificati
                     // (il video originale non è ancora stato tagliato → non sincronizzare VLC)
-                    _tempAudioPath = Path.Combine(Path.GetTempPath(), "aadv_editor_preview.wav");
+                    _tempAudioPath = Path.Combine(Path.GetTempPath(), $"aadv_editor_preview_{System.Diagnostics.Process.GetCurrentProcess().Id}_{GetHashCode()}.wav");
                     WriteSamplesToWav(_tempAudioPath, _samples);
                     _audioReader = new AudioFileReader(_tempAudioPath);
                 }
@@ -1029,7 +1029,9 @@ namespace AirADV.Forms
                 // Pulisce il file audio temporaneo (preview post-delete su video)
                 if (!string.IsNullOrEmpty(_tempAudioPath) && File.Exists(_tempAudioPath))
                 {
-                    try { File.Delete(_tempAudioPath); } catch { }
+                    try { File.Delete(_tempAudioPath); }
+                    catch (IOException ioEx) { Console.WriteLine($"[AudioEditor] Pulizia file temp: {ioEx.Message}"); }
+                    catch (UnauthorizedAccessException uaEx) { Console.WriteLine($"[AudioEditor] Pulizia file temp (accesso negato): {uaEx.Message}"); }
                     _tempAudioPath = null;
                 }
 
@@ -1040,7 +1042,7 @@ namespace AirADV.Forms
                     lblTimeCounter.Text = $"00:00.0 / {totalDur:mm\\:ss\\.f}";
                 }
             }
-            catch { }
+            catch (Exception stopEx) { Console.WriteLine($"[AudioEditor] StopAudio: {stopEx.Message}"); }
 
             // Ferma e resetta anche il player VLC
             if (_isVideo && _vlcPlayer != null)
@@ -1428,7 +1430,9 @@ namespace AirADV.Forms
             // Pulisce il file audio temporaneo se ancora presente
             if (!string.IsNullOrEmpty(_tempAudioPath) && File.Exists(_tempAudioPath))
             {
-                try { File.Delete(_tempAudioPath); } catch { }
+                try { File.Delete(_tempAudioPath); }
+                catch (IOException ioEx) { Console.WriteLine($"[AudioEditor] Pulizia file temp alla chiusura: {ioEx.Message}"); }
+                catch (UnauthorizedAccessException uaEx) { Console.WriteLine($"[AudioEditor] Pulizia file temp alla chiusura (accesso negato): {uaEx.Message}"); }
                 _tempAudioPath = null;
             }
         }
