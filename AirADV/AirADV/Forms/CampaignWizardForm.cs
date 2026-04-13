@@ -80,6 +80,16 @@ namespace AirADV.Forms
 
         public CampaignWizardForm(int stationID, DbcManager.Campaign existingCampaign)
         {
+            if (existingCampaign == null)
+                throw new ArgumentNullException(nameof(existingCampaign));
+
+            existingCampaign.CampaignName ??= "";
+            existingCampaign.CampaignCode ??= "";
+            existingCampaign.DistributionMode ??= "BALANCED";
+            existingCampaign.TimeFrom ??= "00:00:00";
+            existingCampaign.TimeTo ??= "23:59:59";
+            existingCampaign.ManualSlots ??= "";
+
             InitializeComponent();
             InitializeAdvancedOptions();
             InitializeScheduleGrid();

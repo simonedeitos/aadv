@@ -176,7 +176,6 @@ namespace AirADV.Forms
 
             pnlControls.Controls.AddRange(new Control[]
                 { lblGain, trkGain, lblGainValue, btnDeleteSel, btnSave, btnCancel, lblStatus });
-            this.Controls.Add(pnlControls);
 
             // ── Toolbar in alto con Play/Pause/Stop quadrati ──────────
             pnlToolbar = new Panel
@@ -200,20 +199,8 @@ namespace AirADV.Forms
             btnStop.Click += BtnStop_Click;
 
             pnlToolbar.Controls.AddRange(new Control[] { btnPlay, btnPause, btnStop });
-            this.Controls.Add(pnlToolbar);
 
             // ── Area centrale: waveform + eventuale preview video ─────
-            if (_isVideo)
-            {
-                pnlVideo = new Panel
-                {
-                    Dock = DockStyle.Top,
-                    Height = 160,
-                    BackColor = Color.Black
-                };
-                this.Controls.Add(pnlVideo);
-            }
-
             picWaveform = new PictureBox
             {
                 Dock = DockStyle.Fill,
@@ -225,6 +212,20 @@ namespace AirADV.Forms
             picWaveform.MouseMove += PicWaveform_MouseMove;
             picWaveform.MouseUp += PicWaveform_MouseUp;
             this.Controls.Add(picWaveform);
+
+            if (_isVideo)
+            {
+                pnlVideo = new Panel
+                {
+                    Dock = DockStyle.Top,
+                    Height = 160,
+                    BackColor = Color.Black
+                };
+                this.Controls.Add(pnlVideo);
+            }
+
+            this.Controls.Add(pnlToolbar);
+            this.Controls.Add(pnlControls);
 
             // ── Timer playback cursor ─────────────────────────────────
             _playbackTimer = new System.Windows.Forms.Timer { Interval = 50 };
@@ -631,9 +632,9 @@ namespace AirADV.Forms
 
             // Aggiorna volume live in preview audio
             if (_audioReader is AudioFileReader afeGain)
-                afeGain.Volume = (float)Math.Pow(10.0, _gainDb / 20.0);
+                afeGain.Volume = (float)Math.Pow(10.0, _gainDb / 20.0);  // AudioFileReader supports > 1.0
             else if (_waveOut != null)
-                _waveOut.Volume = (float)Math.Pow(10.0, _gainDb / 20.0);
+                _waveOut.Volume = Math.Min(1.0f, Math.Max(0.0f, (float)Math.Pow(10.0, _gainDb / 20.0)));  // Clamp to [0, 1]
 
             // Preview visivo in tempo reale sulla waveform
             RecreateWaveformBitmapWithBoost();
@@ -691,7 +692,7 @@ namespace AirADV.Forms
                     afePlay.Volume = vol;
 
                 _waveOut = new WaveOutEvent();
-                _waveOut.Volume = vol;
+                _waveOut.Volume = Math.Min(1.0f, Math.Max(0.0f, vol));
                 _waveOut.Init(_audioReader);
                 _waveOut.PlaybackStopped += (s, ev) =>
                 {
