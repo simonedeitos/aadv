@@ -607,7 +607,9 @@ namespace AirADV.Forms
                     _isPlaying = false;
                     _playbackTimer.Stop();
                     _playbackPosition = 0f;
-                    picWaveform?.Invoke(new Action(() => picWaveform.Invalidate()));
+                    var wf = picWaveform;
+                    if (wf != null && wf.IsHandleCreated && !wf.IsDisposed)
+                        wf.Invoke(new Action(() => wf.Invalidate()));
                 };
                 _waveOut.Play();
                 _isPlaying = true;
