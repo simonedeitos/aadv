@@ -166,14 +166,15 @@ namespace AirADV.Forms
                 pnlVideoPreview.Visible = true;
                 lblVideoTitle.Text = $"📺 {title}";
 
-                // Carica media in VLC
+                // Carica media in VLC e avvia automaticamente
                 var media = new Media(_libVLC, new Uri(filePath));
                 _vlcMediaPlayer.Media = media;
+                _vlcMediaPlayer.Play();
 
                 // Aggiorna stato player
                 lblPlayerStatus.Text = $"📺 {title}";
                 btnPlaySpot.Enabled = true;
-                btnPlaySpot.Text = "▶";
+                btnPlaySpot.Text = "⏸";
 
                 Console.WriteLine($"[ClientManagement] 📺 Video caricato: {filePath}");
             }
@@ -1034,9 +1035,10 @@ namespace AirADV.Forms
                                     if (_audioPlayer != null && _audioPlayer.IsPlaying)
                                         _audioPlayer.Stop();
                                     _audioPlayer.Load(firstSpot.FilePath);
+                                    _audioPlayer.Play();
                                     lblPlayerStatus.Text = $"🎵 {firstSpot.SpotTitle}";
                                     btnPlaySpot.Enabled = true;
-                                    btnPlaySpot.Text = "▶";
+                                    btnPlaySpot.Text = "⏸";
                                 }
                             }
                             catch (Exception ex)
@@ -1224,9 +1226,10 @@ namespace AirADV.Forms
                             }
 
                             _audioPlayer.Load(spot.FilePath);
+                            _audioPlayer.Play();
                             lblPlayerStatus.Text = $"🎵 {spot.SpotTitle}";
                             btnPlaySpot.Enabled = true;
-                            btnPlaySpot.Text = "▶";
+                            btnPlaySpot.Text = "⏸";
                         }
                     }
                     else
@@ -1310,6 +1313,15 @@ namespace AirADV.Forms
             }
 
             return $"SPOT-{(maxNum + 1):D3}";
+        }
+
+        private void btnStopSpot_Click(object sender, EventArgs e)
+        {
+            StopAllPlayback();
+            HideVideoPreview();
+            btnPlaySpot.Text = "▶";
+            btnPlaySpot.Enabled = false;
+            lblPlayerStatus.Text = LanguageManager.Get("ClientManagement.NoFileLoaded", "Nessun file caricato");
         }
 
         // ═══════════════════════════════════════════════════════════
