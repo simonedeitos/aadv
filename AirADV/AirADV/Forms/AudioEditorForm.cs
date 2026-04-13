@@ -85,6 +85,13 @@ namespace AirADV.Forms
         private Button btnCancel;
         private Label lblStatus;
         private Label lblFileName;
+        private Label lblTimeCounter;
+
+        // ── File temporaneo per anteprima audio dopo delete su video ─
+        private string _tempAudioPath;
+
+        /// <summary>Indica se il file è stato modificato e salvato.</summary>
+        public bool FileWasModified { get; private set; } = false;
 
         private static readonly string[] VIDEO_EXTENSIONS =
             { ".mp4", ".avi", ".mkv", ".mov", ".wmv", ".flv", ".webm", ".m4v", ".mpg", ".mpeg" };
@@ -216,14 +223,23 @@ namespace AirADV.Forms
             btnStop.Location = new Point(104, 6);
             btnStop.Click += BtnStop_Click;
 
-            pnlToolbar.Controls.AddRange(new Control[] { btnPlay, btnPause, btnStop });
+            lblTimeCounter = new Label
+            {
+                Text = "00:00.0 / 00:00.0",
+                AutoSize = true,
+                ForeColor = Color.FromArgb(0, 200, 120),
+                Location = new Point(156, 16),
+                Font = new Font("Consolas", 10f, FontStyle.Bold)
+            };
+
+            pnlToolbar.Controls.AddRange(new Control[] { btnPlay, btnPause, btnStop, lblTimeCounter });
 
             lblFileName = new Label
             {
                 Text = Path.GetFileName(_filePath),
                 AutoSize = true,
                 ForeColor = Color.Silver,
-                Location = new Point(156, 16),
+                Location = new Point(320, 16),
                 Font = new Font("Segoe UI", 9.5f)
             };
             pnlToolbar.Controls.Add(lblFileName);
@@ -507,7 +523,13 @@ namespace AirADV.Forms
                     _originalDurationSec = (double)_samples.Length / _channels / _sampleRate;
 
                 if (lblStatus != null && _samples != null)
-                    lblStatus.Text = $"{Path.GetFileName(_filePath)} | {_sampleRate} Hz | {_channels}ch | {(_samples.Length / _channels / _sampleRate):F1}s";
+                    lblStatus.Text = $"{_sampleRate} Hz | {_channels}ch | {(_samples.Length / _channels / _sampleRate):F1}s";
+
+                if (lblTimeCounter != null && _samples != null && _sampleRate > 0 && _channels > 0)
+                {
+                    TimeSpan totalDur = TimeSpan.FromSeconds((double)_samples.Length / _channels / _sampleRate);
+                    lblTimeCounter.Text = $"00:00.0 / {totalDur:mm\\:ss\\.f}";
+                }
             }
             catch (Exception ex)
             {
@@ -544,7 +566,7 @@ namespace AirADV.Forms
                 _vlcPlayer.Playing += onPlaying;
                 _vlcPlayer.Play();
 
-                lblStatus.Text = $"📺 {Path.GetFileName(_filePath)}";
+                lblStatus.Text = $"📺 Video";
                 this.Text = LanguageManager.Get("AudioEditor.VideoPreviewTitle", "📺 Preview Video")
                     + $" — {Path.GetFileName(_filePath)}";
             }
@@ -833,6 +855,14 @@ namespace AirADV.Forms
                 _playbackPosition = len > 0 ? (float)pos / len : 0f;
                 picWaveform?.Invalidate();
 
+                // Aggiorna contatore tempo corrente / durata totale
+                if (lblTimeCounter != null)
+                {
+                    TimeSpan current = _audioReader.CurrentTime;
+                    TimeSpan total = _audioReader.TotalTime;
+                    lblTimeCounter.Text = $"{current:mm\\:ss\\.f} / {total:mm\\:ss\\.f}";
+                }
+
                 // Aggiorna VU meter dai campioni correnti
                 if (pnlVuMeters != null && _channels >= 1)
                 {
@@ -889,10 +919,24 @@ namespace AirADV.Forms
             {
                 StopAudio();
 
-                if (_isVideo)
+                bool useTemp = _isVideo && _deletedOriginalRanges.Count > 0;
+
+                if (useTemp)
+                {
+                    // Ci sono porzioni eliminate: usa WAV temporaneo dai campioni modificati
+                    // (il video originale non è ancora stato tagliato → non sincronizzare VLC)
+                    _tempAudioPath = Path.Combine(Path.GetTempPath(), "aadv_editor_preview.wav");
+                    WriteSamplesToWav(_tempAudioPath, _samples);
+                    _audioReader = new AudioFileReader(_tempAudioPath);
+                }
+                else if (_isVideo)
+                {
                     _audioReader = new MediaFoundationReader(_filePath);
+                }
                 else
+                {
                     _audioReader = new AudioFileReader(_filePath);
+                }
 
                 float vol = (float)Math.Pow(10.0, _gainDb / 20.0);
                 if (_audioReader is AudioFileReader afePlay)
@@ -914,10 +958,11 @@ namespace AirADV.Forms
                 _isPlaying = true;
                 _videoSyncTick = 0;
                 _playbackTimer.Start();
-                lblStatus.Text = "▶ " + Path.GetFileName(_filePath);
+                lblStatus.Text = "▶ In riproduzione";
 
                 // Avvia e sincronizza il player VLC con l'audio
-                if (_isVideo && _vlcPlayer != null)
+                // (solo se NON stiamo usando l'audio temporaneo dai campioni modificati)
+                if (_isVideo && !useTemp && _vlcPlayer != null)
                 {
                     try
                     {
@@ -980,6 +1025,20 @@ namespace AirADV.Forms
                 _isPlaying = false;
                 picWaveform?.Invalidate();
                 pnlVuMeters?.Invalidate();
+
+                // Pulisce il file audio temporaneo (preview post-delete su video)
+                if (!string.IsNullOrEmpty(_tempAudioPath) && File.Exists(_tempAudioPath))
+                {
+                    try { File.Delete(_tempAudioPath); } catch { }
+                    _tempAudioPath = null;
+                }
+
+                // Resetta il contatore al valore "00:00.0 / durata totale"
+                if (lblTimeCounter != null && _sampleRate > 0 && _channels > 0 && _samples != null)
+                {
+                    TimeSpan totalDur = TimeSpan.FromSeconds((double)_samples.Length / _channels / _sampleRate);
+                    lblTimeCounter.Text = $"00:00.0 / {totalDur:mm\\:ss\\.f}";
+                }
             }
             catch { }
 
@@ -1047,7 +1106,14 @@ namespace AirADV.Forms
             RegenerateWaveformFromSamples();
 
             TimeSpan newDuration = TimeSpan.FromSeconds((double)_samples.Length / _channels / _sampleRate);
-            lblStatus.Text = $"✂️ Selezione eliminata | Durata: {newDuration:mm\\:ss\\.ff}";
+            if (_isVideo)
+                lblStatus.Text = $"✂️ Selezione eliminata | Durata: {newDuration:mm\\:ss\\.ff} | ⚠️ Salva per applicare le modifiche al video";
+            else
+                lblStatus.Text = $"✂️ Selezione eliminata | Durata: {newDuration:mm\\:ss\\.ff}";
+
+            // Aggiorna il contatore con la nuova durata
+            if (lblTimeCounter != null && _sampleRate > 0 && _channels > 0)
+                lblTimeCounter.Text = $"00:00.0 / {newDuration:mm\\:ss\\.f}";
         }
 
         private void RegenerateWaveformFromSamples()
@@ -1128,6 +1194,8 @@ namespace AirADV.Forms
                 _gainDb = 0;
                 trkGain.Value = 0;
                 _deletedOriginalRanges.Clear();
+
+                FileWasModified = true;
 
                 MessageBox.Show(
                     LanguageManager.Get("AudioEditor.SaveSuccess", "✅ File salvato con successo!"),
@@ -1356,6 +1424,13 @@ namespace AirADV.Forms
             StopAudio();
             _waveformBitmap?.Dispose();
             ReleaseVlcResources();
+
+            // Pulisce il file audio temporaneo se ancora presente
+            if (!string.IsNullOrEmpty(_tempAudioPath) && File.Exists(_tempAudioPath))
+            {
+                try { File.Delete(_tempAudioPath); } catch { }
+                _tempAudioPath = null;
+            }
         }
     }
 }
