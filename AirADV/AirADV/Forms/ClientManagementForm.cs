@@ -668,6 +668,16 @@ namespace AirADV.Forms
                 HideVideoPreview();
 
                 LoadClientSpots(client.ID);
+
+                // Forza reload del primo spot nel player dopo cambio cliente
+                if (dgvSpots.Rows.Count > 0)
+                {
+                    dgvSpots.ClearSelection();
+                    dgvSpots.Rows[0].Selected = true;
+                    dgvSpots.CurrentCell = dgvSpots.Rows[0].Cells[0];
+                    // L'evento SelectionChanged si attiverà e caricherà lo spot nel player
+                }
+
                 LoadClientCampaigns(client.ID);
             }
             catch (Exception ex)
@@ -1166,6 +1176,26 @@ namespace AirADV.Forms
                 using (var editorForm = new AudioEditorForm(spot.FilePath))
                 {
                     editorForm.ShowDialog(this);
+
+                    if (editorForm.FileWasModified)
+                    {
+                        // Aggiorna la durata dello spot nel database
+                        try
+                        {
+                            spot.Duration = AudioManager.GetDuration(spot.FilePath);
+                            var allSpots = DbcManager.Load<DbcManager.Spot>("ADV_Spots.dbc");
+                            var existing = allSpots.FirstOrDefault(s => s.ID == spot.ID);
+                            if (existing != null)
+                            {
+                                existing.Duration = spot.Duration;
+                                DbcManager.Save("ADV_Spots.dbc", allSpots);
+                            }
+                        }
+                        catch (Exception durEx)
+                        {
+                            Console.WriteLine($"[ClientManagement] Errore aggiornamento durata spot: {durEx.Message}");
+                        }
+                    }
                 }
                 // Ricarica spot dopo eventuali modifiche
                 if (_selectedClient != null)
@@ -1174,8 +1204,31 @@ namespace AirADV.Forms
                 // Reinizializza il player VLC perché AudioEditorForm ha disposto le risorse native
                 ReinitializeVideoPreview();
 
-                // Ricarica lo spot selezionato nel player dopo il ritorno dall'editor
-                DgvSpots_SelectionChanged(this, EventArgs.Empty);
+                // Forza reload dello spot corrente nel player
+                if (dgvSpots.SelectedRows.Count > 0)
+                {
+                    var currentSpot = dgvSpots.SelectedRows[0].Tag as DbcManager.Spot;
+                    if (currentSpot != null && !string.IsNullOrEmpty(currentSpot.FilePath) && File.Exists(currentSpot.FilePath))
+                    {
+                        if (IsVideoFile(currentSpot.FilePath))
+                            ShowVideoPreview(currentSpot.FilePath, currentSpot.SpotTitle);
+                        else
+                        {
+                            HideVideoPreview();
+                            _audioPlayer.Load(currentSpot.FilePath);
+                            lblPlayerStatus.Text = $"🎵 {currentSpot.SpotTitle}";
+                            btnPlaySpot.Enabled = true;
+                            btnPlaySpot.Text = "▶";
+                        }
+                    }
+                }
+                else if (dgvSpots.Rows.Count > 0)
+                {
+                    // Se non c'è selezione, seleziona il primo spot
+                    dgvSpots.ClearSelection();
+                    dgvSpots.Rows[0].Selected = true;
+                    dgvSpots.CurrentCell = dgvSpots.Rows[0].Cells[0];
+                }
             }
             catch (Exception ex)
             {
