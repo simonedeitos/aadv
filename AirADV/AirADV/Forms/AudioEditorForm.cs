@@ -958,7 +958,7 @@ namespace AirADV.Forms
                 _isPlaying = true;
                 _videoSyncTick = 0;
                 _playbackTimer.Start();
-                lblStatus.Text = "▶ In riproduzione";
+                lblStatus.Text = "";
 
                 // Avvia e sincronizza il player VLC con l'audio
                 // (solo se NON stiamo usando l'audio temporaneo dai campioni modificati)
