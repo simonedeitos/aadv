@@ -157,6 +157,37 @@ namespace AirADV.Forms
             }
         }
 
+        private void ReinitializeVideoPreview()
+        {
+            try
+            {
+                // Ferma e rilascia il player esistente
+                if (_vlcMediaPlayer != null)
+                {
+                    try { _vlcMediaPlayer.Stop(); } catch (Exception ex) { Console.WriteLine($"[ClientManagement] Stop VLC: {ex.Message}"); }
+                    try { _vlcMediaPlayer.Dispose(); } catch (Exception ex) { Console.WriteLine($"[ClientManagement] Dispose MediaPlayer: {ex.Message}"); }
+                    _vlcMediaPlayer = null;
+                }
+
+                if (_libVLC != null)
+                {
+                    try { _libVLC.Dispose(); } catch (Exception ex) { Console.WriteLine($"[ClientManagement] Dispose LibVLC: {ex.Message}"); }
+                    _libVLC = null;
+                }
+
+                pnlVideoPreview.Visible = false;
+
+                // Reinizializza da zero
+                SetupVideoPreview();
+
+                Console.WriteLine("[ClientManagement] 🔄 Video preview reinizializzato");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ClientManagement] ⚠️ Errore reinizializzazione video preview: {ex.Message}");
+            }
+        }
+
         private void ShowVideoPreview(string filePath, string title)
         {
             try
@@ -1134,6 +1165,9 @@ namespace AirADV.Forms
                 // Ricarica spot dopo eventuali modifiche
                 if (_selectedClient != null)
                     LoadClientSpots(_selectedClient.ID);
+
+                // Reinizializza il player VLC perché AudioEditorForm ha disposto le risorse native
+                ReinitializeVideoPreview();
             }
             catch (Exception ex)
             {
